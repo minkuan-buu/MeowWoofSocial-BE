@@ -14,5 +14,6 @@ namespace MeowWoofSocial.Data.Repositories.UserRepositories
         : base(context)
         {
         }
+
     }
 }
