@@ -10,5 +10,6 @@ namespace MeowWoofSocial.Data.Repositories.UserRepositories
 {
     public interface IUserRepositories : IGenericRepositories<User>
     {
+       
     }
 }

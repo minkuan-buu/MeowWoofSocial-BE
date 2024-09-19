@@ -2,9 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
 using Microsoft.IdentityModel.Tokens;
-using PTEducation.Data.DTO.ResponseModel;
 using RNGCryptoServiceProvider = System.Security.Cryptography.RNGCryptoServiceProvider;
 
 namespace MeowWoofSocial.Business.ApplicationMiddleware;

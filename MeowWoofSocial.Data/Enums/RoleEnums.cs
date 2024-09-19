@@ -10,6 +10,7 @@ namespace MeowWoofSocial.Data.Enums
     {
         Admin,
         Manager,
-        Student
+        User,
+        AdminPetStore,
     }
 }
