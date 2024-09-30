@@ -9,6 +9,10 @@ using MeowWoofSocial.Data.Repositories.UserRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using MeowWoofSocial.Data.Repositories.PostRepositories;
+using MeowWoofSocial.Data.Repositories.PostAttachmentRepositories;
+using MeowWoofSocial.Data.Repositories.HashtagRepositories;
+using MeowWoofSocial.Business.Services.PostServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,8 +75,12 @@ builder.Services.AddControllers()
 
 //========================================== REPOSITORY ===========================================
 builder.Services.AddScoped<IUserRepositories, UserRepositories>();
+builder.Services.AddScoped<IPostRepositories, PostRepositories>();
+builder.Services.AddScoped<IHashtagRepositories, HastagRepositories>();
+builder.Services.AddScoped<IPostAttachmentRepositories, PostAttachmentRepositories>();
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddScoped<IPostServices, PostServices>();
 //=========================================== CORS ================================================
 var app = builder.Build();
 
