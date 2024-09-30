@@ -9,13 +9,11 @@ public partial class User
 
     public string Name { get; set; } = null!;
 
-    public string Username { get; set; } = null!;
+    public string Email { get; set; } = null!;
 
     public byte[] Password { get; set; } = null!;
 
     public byte[] Salt { get; set; } = null!;
-
-    public string Email { get; set; } = null!;
 
     public string Phone { get; set; } = null!;
 
