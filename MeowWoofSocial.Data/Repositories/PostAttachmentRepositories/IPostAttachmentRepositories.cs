@@ -6,10 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeowWoofSocial.Data.Repositories.UserRepositories
+namespace MeowWoofSocial.Data.Repositories.PostAttachmentRepositories
 {
-    public interface IUserRepositories : IGenericRepositories<User>
+    public interface IPostAttachmentRepositories : IGenericRepositories<PostAttachment>
     {
-       
     }
 }

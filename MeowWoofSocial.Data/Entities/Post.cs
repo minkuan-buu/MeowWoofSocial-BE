@@ -9,19 +9,9 @@ public partial class Post
 
     public Guid UserId { get; set; }
 
-    public string Type { get; set; } = null!;
-
     public string Content { get; set; } = null!;
 
-    public string Attachment { get; set; } = null!;
-
-    public string Hashtag { get; set; } = null!;
-
     public string Status { get; set; } = null!;
-
-    public string? Phone { get; set; }
-
-    public string? Address { get; set; }
 
     public DateTime CreateAt { get; set; }
 

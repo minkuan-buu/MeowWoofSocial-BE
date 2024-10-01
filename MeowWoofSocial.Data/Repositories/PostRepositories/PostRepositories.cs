@@ -6,14 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeowWoofSocial.Data.Repositories.UserRepositories
+namespace MeowWoofSocial.Data.Repositories.PostRepositories
 {
-    public class UserRepositories : GenericRepositories<User>, IUserRepositories
+    public class PostRepositories : GenericRepositories<Post>, IPostRepositories
     {
-        public UserRepositories(MeowWoofSocialContext context)
+        public PostRepositories(MeowWoofSocialContext context)
         : base(context)
         {
         }
-
     }
-}
+    }

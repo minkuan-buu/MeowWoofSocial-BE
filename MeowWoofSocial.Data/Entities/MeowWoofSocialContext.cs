@@ -6,10 +6,6 @@ namespace MeowWoofSocial.Data.Entities;
 
 public partial class MeowWoofSocialContext : DbContext
 {
-    public MeowWoofSocialContext()
-    {
-    }
-
     public MeowWoofSocialContext(DbContextOptions<MeowWoofSocialContext> options)
         : base(options)
     {
@@ -53,21 +49,19 @@ public partial class MeowWoofSocialContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserAddress> UserAddresses { get; set; }
+
     public virtual DbSet<UserBankInformation> UserBankInformations { get; set; }
 
     public virtual DbSet<UserFollowing> UserFollowings { get; set; }
 
     public virtual DbSet<UserPet> UserPets { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=(local);Uid=sa;Pwd=1234567890;Database=MeowWoofSocial;Max Pool Size=100;Min Pool Size=5;Pooling=true;TrustServerCertificate=True;Connect Timeout=30;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Category__3214EC072C9722A9");
+            entity.HasKey(e => e.Id).HasName("PK__Category__3214EC073B5C2847");
 
             entity.ToTable("Category");
 
@@ -82,12 +76,12 @@ public partial class MeowWoofSocialContext : DbContext
 
             entity.HasOne(d => d.ParentCategory).WithMany(p => p.InverseParentCategory)
                 .HasForeignKey(d => d.ParentCategoryId)
-                .HasConstraintName("FK__Category__Parent__5FB337D6");
+                .HasConstraintName("FK__Category__Parent__619B8048");
         });
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Notifica__3214EC07AC5F3A88");
+            entity.HasKey(e => e.Id).HasName("PK__Notifica__3214EC07BB2823CF");
 
             entity.ToTable("Notification");
 
@@ -99,17 +93,17 @@ public partial class MeowWoofSocialContext : DbContext
 
             entity.HasOne(d => d.Post).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.PostId)
-                .HasConstraintName("FK__Notificat__PostI__6EF57B66");
+                .HasConstraintName("FK__Notificat__PostI__70DDC3D8");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Notificat__UserI__76969D2E");
+                .HasConstraintName("FK__Notificat__UserI__787EE5A0");
         });
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Order__3214EC0742EECF52");
+            entity.HasKey(e => e.Id).HasName("PK__Order__3214EC076CD9613C");
 
             entity.ToTable("Order");
 
@@ -124,12 +118,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Order__UserId__6383C8BA");
+                .HasConstraintName("FK__Order__UserId__656C112C");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__OrderDet__3214EC07A315B834");
+            entity.HasKey(e => e.Id).HasName("PK__OrderDet__3214EC07C2D027C2");
 
             entity.ToTable("OrderDetail");
 
@@ -144,17 +138,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__OrderDeta__Order__619B8048");
+                .HasConstraintName("FK__OrderDeta__Order__6383C8BA");
 
             entity.HasOne(d => d.ProductItem).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.ProductItemId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__OrderDeta__Produ__656C112C");
+                .HasConstraintName("FK__OrderDeta__Produ__6754599E");
         });
 
         modelBuilder.Entity<PetCareBooking>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PetCareB__3214EC07DCA7C7B3");
+            entity.HasKey(e => e.Id).HasName("PK__PetCareB__3214EC07152086F3");
 
             entity.ToTable("PetCareBooking");
 
@@ -167,17 +161,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.PetStore).WithMany(p => p.PetCareBookings)
                 .HasForeignKey(d => d.PetStoreId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetCareBo__PetSt__778AC167");
+                .HasConstraintName("FK__PetCareBo__PetSt__797309D9");
 
             entity.HasOne(d => d.User).WithMany(p => p.PetCareBookings)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetCareBo__UserI__6E01572D");
+                .HasConstraintName("FK__PetCareBo__UserI__6FE99F9F");
         });
 
         modelBuilder.Entity<PetCareBookingDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PetCareB__3214EC07AB7D81B7");
+            entity.HasKey(e => e.Id).HasName("PK__PetCareB__3214EC07C5DB9BDA");
 
             entity.ToTable("PetCareBookingDetail");
 
@@ -195,17 +189,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Booking).WithMany(p => p.PetCareBookingDetails)
                 .HasForeignKey(d => d.BookingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetCareBo__Booki__787EE5A0");
+                .HasConstraintName("FK__PetCareBo__Booki__7A672E12");
 
             entity.HasOne(d => d.Pet).WithMany(p => p.PetCareBookingDetails)
                 .HasForeignKey(d => d.PetId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetCareBo__PetId__797309D9");
+                .HasConstraintName("FK__PetCareBo__PetId__7B5B524B");
         });
 
         modelBuilder.Entity<PetStore>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC076BF4520E");
+            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC07D2BBC9C8");
 
             entity.ToTable("PetStore");
 
@@ -231,12 +225,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.PetStores)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStore__UserId__6477ECF3");
+                .HasConstraintName("FK__PetStore__UserId__66603565");
         });
 
         modelBuilder.Entity<PetStoreProduct>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC07134A7B69");
+            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC074CDA97BB");
 
             entity.ToTable("PetStoreProduct");
 
@@ -253,17 +247,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Category).WithMany(p => p.PetStoreProducts)
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreP__Categ__66603565");
+                .HasConstraintName("FK__PetStoreP__Categ__68487DD7");
 
             entity.HasOne(d => d.PetStore).WithMany(p => p.PetStoreProducts)
                 .HasForeignKey(d => d.PetStoreId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreP__PetSt__6754599E");
+                .HasConstraintName("FK__PetStoreP__PetSt__693CA210");
         });
 
         modelBuilder.Entity<PetStoreProductItem>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC07C9D8B709");
+            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC07CC8D68C5");
 
             entity.ToTable("PetStoreProductItem");
 
@@ -279,12 +273,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.PetStoreProductItems)
                 .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreP__Produ__7A672E12");
+                .HasConstraintName("FK__PetStoreP__Produ__7C4F7684");
         });
 
         modelBuilder.Entity<PetStoreRating>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC07DDF36D35");
+            entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC0710E342A0");
 
             entity.ToTable("PetStoreRating");
 
@@ -297,67 +291,57 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.PetStore).WithMany(p => p.PetStoreRatings)
                 .HasForeignKey(d => d.PetStoreId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreR__PetSt__7C4F7684");
+                .HasConstraintName("FK__PetStoreR__PetSt__7E37BEF6");
 
             entity.HasOne(d => d.User).WithMany(p => p.PetStoreRatings)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreR__UserI__7B5B524B");
+                .HasConstraintName("FK__PetStoreR__UserI__7D439ABD");
         });
 
         modelBuilder.Entity<Post>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Post__3214EC07946DD89B");
+            entity.HasKey(e => e.Id).HasName("PK__Post__3214EC073FE964E5");
 
             entity.ToTable("Post");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Address)
-                .HasMaxLength(1000)
-                .IsUnicode(false);
-            entity.Property(e => e.Attachment).IsUnicode(false);
             entity.Property(e => e.Content)
                 .HasMaxLength(8000)
                 .IsUnicode(false);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
-            entity.Property(e => e.Hashtag)
-                .HasMaxLength(1000)
-                .IsUnicode(false);
-            entity.Property(e => e.Phone)
-                .HasMaxLength(12)
-                .IsUnicode(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Type)
-                .HasMaxLength(1000)
                 .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.User).WithMany(p => p.Posts)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Post__UserId__70DDC3D8");
+                .HasConstraintName("FK__Post__UserId__72C60C4A");
         });
 
         modelBuilder.Entity<PostAttachment>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostAtta__3214EC078BA410ED");
+            entity.HasKey(e => e.Id).HasName("PK__PostAtta__3214EC073D46E3A6");
 
             entity.ToTable("PostAttachment");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Attachment).IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
 
             entity.HasOne(d => d.Post).WithMany(p => p.PostAttachments)
                 .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostAttac__PostI__6A30C649");
+                .HasConstraintName("FK__PostAttac__PostI__6C190EBB");
         });
 
         modelBuilder.Entity<PostHashtag>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostHash__3214EC07564D1F30");
+            entity.HasKey(e => e.Id).HasName("PK__PostHash__3214EC07F1BAC1C4");
 
             entity.ToTable("PostHashtag");
 
@@ -365,16 +349,19 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Hashtag)
                 .HasMaxLength(150)
                 .IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
 
             entity.HasOne(d => d.Post).WithMany(p => p.PostHashtags)
                 .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostHasht__PostI__693CA210");
+                .HasConstraintName("FK__PostHasht__PostI__6B24EA82");
         });
 
         modelBuilder.Entity<PostReaction>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostReac__3214EC07241A1A22");
+            entity.HasKey(e => e.Id).HasName("PK__PostReac__3214EC070D879377");
 
             entity.ToTable("PostReaction");
 
@@ -397,17 +384,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Post).WithMany(p => p.PostReactions)
                 .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostReact__PostI__6FE99F9F");
+                .HasConstraintName("FK__PostReact__PostI__71D1E811");
 
             entity.HasOne(d => d.User).WithMany(p => p.PostReactions)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostReact__UserI__75A278F5");
+                .HasConstraintName("FK__PostReact__UserI__778AC167");
         });
 
         modelBuilder.Entity<PostStored>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostStor__3214EC07D119DCA5");
+            entity.HasKey(e => e.Id).HasName("PK__PostStor__3214EC07EF21920E");
 
             entity.ToTable("PostStored");
 
@@ -420,17 +407,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Post).WithMany(p => p.PostStoreds)
                 .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostStore__PostI__72C60C4A");
+                .HasConstraintName("FK__PostStore__PostI__74AE54BC");
 
             entity.HasOne(d => d.User).WithMany(p => p.PostStoreds)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostStore__UserI__71D1E811");
+                .HasConstraintName("FK__PostStore__UserI__73BA3083");
         });
 
         modelBuilder.Entity<ProductRating>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ProductR__3214EC071C630708");
+            entity.HasKey(e => e.Id).HasName("PK__ProductR__3214EC070A04E9BA");
 
             entity.ToTable("ProductRating");
 
@@ -443,17 +430,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.ProductRatings)
                 .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductRa__Produ__7E37BEF6");
+                .HasConstraintName("FK__ProductRa__Produ__00200768");
 
             entity.HasOne(d => d.User).WithMany(p => p.ProductRatings)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductRa__UserI__7D439ABD");
+                .HasConstraintName("FK__ProductRa__UserI__7F2BE32F");
         });
 
         modelBuilder.Entity<Report>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Report__3214EC070A0A219C");
+            entity.HasKey(e => e.Id).HasName("PK__Report__3214EC078293C79F");
 
             entity.ToTable("Report");
 
@@ -472,21 +459,21 @@ public partial class MeowWoofSocialContext : DbContext
 
             entity.HasOne(d => d.Comment).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.CommentId)
-                .HasConstraintName("FK__Report__CommentI__6D0D32F4");
+                .HasConstraintName("FK__Report__CommentI__6EF57B66");
 
             entity.HasOne(d => d.Post).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.PostId)
-                .HasConstraintName("FK__Report__PostId__6C190EBB");
+                .HasConstraintName("FK__Report__PostId__6E01572D");
 
             entity.HasOne(d => d.User).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Report__UserId__6B24EA82");
+                .HasConstraintName("FK__Report__UserId__6D0D32F4");
         });
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Transact__3214EC072F551EFB");
+            entity.HasKey(e => e.Id).HasName("PK__Transact__3214EC07EF3E601A");
 
             entity.ToTable("Transaction");
 
@@ -503,19 +490,22 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Order).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Transacti__Order__628FA481");
+                .HasConstraintName("FK__Transacti__Order__6477ECF3");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__User__3214EC07C5B33255");
+            entity.HasKey(e => e.Id).HasName("PK__User__3214EC07CC0CEA21");
 
             entity.ToTable("User");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Avartar)
+                .HasMaxLength(1000)
+                .IsUnicode(false);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Email)
-                .HasMaxLength(1000)
+                .HasMaxLength(500)
                 .IsUnicode(false);
             entity.Property(e => e.Name)
                 .HasMaxLength(200)
@@ -530,14 +520,39 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
-            entity.Property(e => e.Username)
-                .HasMaxLength(100)
+        });
+
+        modelBuilder.Entity<UserAddress>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__UserAddr__3214EC072E0D7489");
+
+            entity.ToTable("UserAddress");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Address)
+                .HasMaxLength(2000)
                 .IsUnicode(false);
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.Phone)
+                .HasMaxLength(1000)
+                .IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__UserAddre__UserI__01142BA1");
         });
 
         modelBuilder.Entity<UserBankInformation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__UserBank__3214EC07113C705D");
+            entity.HasKey(e => e.Id).HasName("PK__UserBank__3214EC077358A1A0");
 
             entity.ToTable("UserBankInformation");
 
@@ -562,12 +577,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserBankInformations)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__UserBankI__UserI__60A75C0F");
+                .HasConstraintName("FK__UserBankI__UserI__628FA481");
         });
 
         modelBuilder.Entity<UserFollowing>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__UserFoll__3214EC074FB56129");
+            entity.HasKey(e => e.Id).HasName("PK__UserFoll__3214EC07E07A9933");
 
             entity.ToTable("UserFollowing");
 
@@ -579,17 +594,17 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.Follower).WithMany(p => p.UserFollowingFollowers)
                 .HasForeignKey(d => d.FollowerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__UserFollo__Follo__73BA3083");
+                .HasConstraintName("FK__UserFollo__Follo__75A278F5");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserFollowingUsers)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__UserFollo__UserI__74AE54BC");
+                .HasConstraintName("FK__UserFollo__UserI__76969D2E");
         });
 
         modelBuilder.Entity<UserPet>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__UserPet__3214EC070DF97F3E");
+            entity.HasKey(e => e.Id).HasName("PK__UserPet__3214EC07974E98E4");
 
             entity.ToTable("UserPet");
 
@@ -609,12 +624,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Type)
                 .HasMaxLength(30)
                 .IsUnicode(false);
-            entity.Property(e => e.Weight).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.Weight).HasColumnType("decimal(4, 1)");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserPets)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__UserPet__UserId__68487DD7");
+                .HasConstraintName("FK__UserPet__UserId__6A30C649");
         });
 
         OnModelCreatingPartial(modelBuilder);

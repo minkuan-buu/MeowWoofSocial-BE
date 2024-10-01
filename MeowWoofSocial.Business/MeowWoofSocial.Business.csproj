@@ -16,8 +16,4 @@
     <ProjectReference Include="..\MeowWoofSocial.Data\MeowWoofSocial.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\UserServices\" />
-  </ItemGroup>
-
 </Project>

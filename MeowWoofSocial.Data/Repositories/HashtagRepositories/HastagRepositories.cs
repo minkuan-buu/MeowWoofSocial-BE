@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeowWoofSocial.Data.Repositories.UserRepositories
+namespace MeowWoofSocial.Data.Repositories.HashtagRepositories
 {
-    public class UserRepositories : GenericRepositories<User>, IUserRepositories
+    public class HastagRepositories : GenericRepositories<PostHashtag>, IHashtagRepositories
     {
-        public UserRepositories(MeowWoofSocialContext context)
+        public HastagRepositories(MeowWoofSocialContext context)
         : base(context)
         {
         }
-
     }
-}
+    }
+

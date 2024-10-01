@@ -1,9 +1,20 @@
 using MeowWoofSocial.API.Middleware;
 using MeowWoofSocial.Business.MapperProfiles;
+using MeowWoofSocial.Business.Services.UserServices;
 using MeowWoofSocial.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using MeowWoofSocial.Data.Repositories.UserRepositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using MeowWoofSocial.Data.Repositories.PostRepositories;
+using MeowWoofSocial.Data.Repositories.PostAttachmentRepositories;
+using MeowWoofSocial.Data.Repositories.HashtagRepositories;
+using MeowWoofSocial.Business.Services.PostServices;
+using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
+using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,8 +31,8 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
-        Title = "MedicineStore.API",
-        Description = "Medicine Store"
+        Title = "MeowWoofSocial.API",
+        Description = "Meow Woof Social"
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -65,9 +76,15 @@ builder.Services.AddControllers()
         });
 
 //========================================== REPOSITORY ===========================================
-
+builder.Services.AddScoped<IUserRepositories, UserRepositories>();
+builder.Services.AddScoped<IPostRepositories, PostRepositories>();
+builder.Services.AddScoped<IHashtagRepositories, HastagRepositories>();
+builder.Services.AddScoped<IPostAttachmentRepositories, PostAttachmentRepositories>();
+builder.Services.AddScoped<IPostReactionRepositories, PostReactionRepositories>();
+builder.Services.AddScoped<IUserFollowingRepositories, UserFollowingRepositories>();
 //=========================================== SERVICE =============================================
-
+builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddScoped<IPostServices, PostServices>();
 //=========================================== CORS ================================================
 var app = builder.Build();
 
