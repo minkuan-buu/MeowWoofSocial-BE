@@ -18,13 +18,28 @@ namespace MeowWoofSocial.API.Controllers
             _postServices = postServices;
         }
 
-        [HttpPost("create_post")]
+        [HttpPost("create-post")]
         public async Task<IActionResult> Login([FromBody] PostCreateReqModel post)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _postServices.CreatePost(post, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("get-news-feed")]
+        public async Task<IActionResult> GetNewsFeed()
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _postServices.GetNewsFeed(token);
                 return Ok(result);
             }
             catch (CustomException ex)

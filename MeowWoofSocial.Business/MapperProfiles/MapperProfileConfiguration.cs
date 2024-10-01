@@ -2,6 +2,7 @@
 using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
+using MeowWoofSocial.Data.Enums;
 
 namespace MeowWoofSocial.Business.MapperProfiles
 {
@@ -31,8 +32,44 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<PostHashtag, PostHashtagResModel>();
 
             CreateMap<User, PostAuthorResModel>()
-                .ForMember(dest => dest.Avatar, opt => opt.Ignore());
+            .ForMember(dest => dest.Avatar, opt => opt.Ignore());
 
+            CreateMap<UserFollowing, UserFollowingResModel>();
+
+            CreateMap<Post, PostDetailResModel>()
+                .ForMember(dest => dest.author, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments))
+                .ForMember(dest => dest.Feeling, opt => opt.MapFrom(src => src.PostReactions
+                    .Where(x => x.Type == PostReactionType.Feeling.ToString())
+                    .Select(x => new FeelingPostResModel
+                    {
+                        Id = x.Id,
+                        TypeReact = x.TypeReact,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        }
+                    }).ToList()))
+                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.PostReactions
+                    .Where(x => x.Type == PostReactionType.Comment.ToString())
+                    .Select(x => new CommentPostResModel
+                    {
+                        Id = x.Id,
+                        Content = x.Content,
+                        Attachment = x.Attachment,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        },
+                        CreatedAt = x.CreateAt,
+                        UpdatedAt = x.UpdateAt
+                    }).ToList()));
+
+            CreateMap<PostReaction, ReactionAuthorModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name));
         }
+
     }
-}
+    }
