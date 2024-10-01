@@ -11,5 +11,7 @@ public partial class PostHashtag
 
     public string? Hashtag { get; set; }
 
+    public string Status { get; set; } = null!;
+
     public virtual Post Post { get; set; } = null!;
 }

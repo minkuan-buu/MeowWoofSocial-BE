@@ -9,13 +9,13 @@ public partial class User
 
     public string Name { get; set; } = null!;
 
-    public string Username { get; set; } = null!;
+    public string Email { get; set; } = null!;
+
+    public string? Avartar { get; set; }
 
     public byte[] Password { get; set; } = null!;
 
     public byte[] Salt { get; set; } = null!;
-
-    public string Email { get; set; } = null!;
 
     public string Phone { get; set; } = null!;
 
@@ -46,6 +46,8 @@ public partial class User
     public virtual ICollection<ProductRating> ProductRatings { get; set; } = new List<ProductRating>();
 
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
+
+    public virtual ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
 
     public virtual ICollection<UserBankInformation> UserBankInformations { get; set; } = new List<UserBankInformation>();
 
