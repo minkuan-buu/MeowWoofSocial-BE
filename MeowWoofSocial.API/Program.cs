@@ -97,10 +97,10 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod();
         //.AllowCredentials();
-    });
+    });`
 });
 //=========================================== FIREBASE ==============================================
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"fticket-cloud-storage.json");
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"meowwoofsocial.json");
 
 var app = builder.Build();
 
