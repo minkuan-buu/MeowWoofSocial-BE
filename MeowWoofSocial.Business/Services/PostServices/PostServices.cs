@@ -105,7 +105,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
-                    includeProperties: "Follower.Posts.PostReactions.User"
+                    includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
                 );
 
                 var followedPosts = new List<PostDetailResModel>();
@@ -118,7 +118,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         {
                             Id = followerPost.Id,
                             author = _mapper.Map<PostAuthorResModel>(following.Follower),
-                            Attachments = _mapper.Map<List<PostAttachmentResModel>>(followerPost.PostAttachments),
+                            Attachment = _mapper.Map<List<PostAttachmentResModel>>(followerPost.PostAttachments),
+                            Hashtag = _mapper.Map<List<PostHashtagResModel>>(followerPost.PostHashtags),
                             Content = followerPost.Content,
                             CreateAt = followerPost.CreateAt,
                             Status = followerPost.Status,
@@ -153,7 +154,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 var nonFollowedPosts = await _postRepo.GetList(
                     x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId),
-                    includeProperties: "User,PostReactions.User"
+                    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
                 );
 
                 var otherPosts = new List<PostDetailResModel>();
@@ -163,7 +164,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     {
                         Id = post.Id,
                         author = _mapper.Map<PostAuthorResModel>(post.User),
-                        Attachments = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
+                        Attachment = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
+                        Hashtag = _mapper.Map<List<PostHashtagResModel>>(post.PostHashtags),
                         Content = post.Content,
                         CreateAt = post.CreateAt,
                         Status = post.Status,
