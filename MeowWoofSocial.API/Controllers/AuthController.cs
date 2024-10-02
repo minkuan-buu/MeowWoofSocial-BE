@@ -8,11 +8,11 @@ namespace MeowWoofSocial.API.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IUserServices _userServices;
 
-        public UserController(IUserServices userServices)
+        public AuthController(IUserServices userServices)
         {
             _userServices = userServices;
         }
@@ -29,6 +29,7 @@ namespace MeowWoofSocial.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterReqModel newUser)
         {
