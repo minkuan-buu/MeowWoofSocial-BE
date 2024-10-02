@@ -1,5 +1,6 @@
 ﻿using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -6,18 +6,27 @@ namespace MeowWoofSocial.Business.Services.CloudServices;
 public class CloudStorage : ICloudStorage
 {
     private readonly StorageClient _storageClient;
-    private const string BucketName = "fticket-9d523.appspot.com";
+    private const string BucketName = "meowwoofsocial-75790.appspot.com";
     public CloudStorage(StorageClient storageClient)
     {
         _storageClient = storageClient;
     }
 
-    public async Task<string> UploadFile(IFormFile file, string filePath)
+    public async Task<List<string>> UploadFile(List<IFormFile> files, string filePath)
     {
-        using var stream = new MemoryStream();
-        await file.CopyToAsync(stream);
-        var objectName = $"{filePath}/{file.FileName}";
-        var blob = await _storageClient.UploadObjectAsync(BucketName, objectName, file.ContentType, stream);
-        return $"https://storage.googleapis.com/{BucketName}/{objectName}";
+        List<string> uploadUrl = new();
+        
+        foreach(var file in files)
+        {
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                var objectName = $"{filePath}/{file.FileName}";
+                _storageClient.UploadObject(BucketName, objectName, file.ContentType, stream);
+                uploadUrl.Add($"https://storage.googleapis.com/{BucketName}/{objectName}");
+            };
+        }
+        return uploadUrl;
     }
 }

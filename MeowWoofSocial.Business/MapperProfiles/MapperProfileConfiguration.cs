@@ -18,7 +18,6 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Password, opt => opt.Ignore());
 
             CreateMap<PostCreateReqModel, Post>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.PostAttachments, opt => opt.Ignore())
                 .ForMember(dest => dest.PostHashtags, opt => opt.Ignore());
 

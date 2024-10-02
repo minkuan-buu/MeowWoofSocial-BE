@@ -15,6 +15,8 @@ using MeowWoofSocial.Data.Repositories.HashtagRepositories;
 using MeowWoofSocial.Business.Services.PostServices;
 using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
+using Google.Cloud.Storage.V1;
+using MeowWoofSocial.Business.Services.CloudServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +77,9 @@ builder.Services.AddControllers()
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         });
 
+//=========================================== FIREBASE ============================================
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"meowwoofsocial.json");
+builder.Services.AddSingleton<ICloudStorage>(s => new CloudStorage(StorageClient.Create()));
 //========================================== REPOSITORY ===========================================
 builder.Services.AddScoped<IUserRepositories, UserRepositories>();
 builder.Services.AddScoped<IPostRepositories, PostRepositories>();
@@ -97,10 +102,8 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod();
         //.AllowCredentials();
-    });`
+    });
 });
-//=========================================== FIREBASE ==============================================
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"meowwoofsocial.json");
 
 var app = builder.Build();
 

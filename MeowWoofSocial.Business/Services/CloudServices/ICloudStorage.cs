@@ -4,5 +4,5 @@ namespace MeowWoofSocial.Business.Services.CloudServices;
 
 public interface ICloudStorage
 {
-    public Task<string> UploadFile(IFormFile file, string filePath);
+    public Task<List<string>> UploadFile(List<IFormFile> files, string filePath);
 }
