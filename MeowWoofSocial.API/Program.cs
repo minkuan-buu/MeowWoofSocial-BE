@@ -99,7 +99,8 @@ builder.Services.AddCors(options =>
         //.AllowCredentials();
     });
 });
-
+//=========================================== FIREBASE ==============================================
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"fticket-cloud-storage.json");
 
 var app = builder.Build();
 
