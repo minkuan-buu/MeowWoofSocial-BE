@@ -29,7 +29,7 @@ namespace MeowWoofSocial.API.Controllers
             }
             catch (CustomException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -44,7 +44,7 @@ namespace MeowWoofSocial.API.Controllers
             }
             catch (CustomException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
