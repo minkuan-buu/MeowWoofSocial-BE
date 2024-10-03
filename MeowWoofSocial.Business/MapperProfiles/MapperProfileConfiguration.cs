@@ -90,6 +90,11 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<PostReaction, ReactionAuthorModel>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name));
+
+            CreateMap<UserFollowingReqModel, UserFollowing>()
+                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId));
+
         }
     }
 }
