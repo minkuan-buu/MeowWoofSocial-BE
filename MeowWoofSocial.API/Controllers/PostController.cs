@@ -19,7 +19,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPost("create-post")]
-        public async Task<IActionResult> Login([FromBody] PostCreateReqModel post)
+        public async Task<IActionResult> Login([FromForm] PostCreateReqModel post)
         {
             try
             {

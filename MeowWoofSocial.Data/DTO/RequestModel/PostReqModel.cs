@@ -1,4 +1,6 @@
-﻿namespace MeowWoofSocial.Data.DTO.RequestModel
+﻿using Microsoft.AspNetCore.Http;
+
+namespace MeowWoofSocial.Data.DTO.RequestModel
 {
     public class PostReqModel
     {
@@ -7,7 +9,7 @@
     public class PostCreateReqModel
     {
         public string Content { get; set; } = null!;
-        public string[]? Attachment { get; set; }
+        public List<IFormFile>? Attachment { get; set; }
         public string[]? HashTag { get; set; }
     }
 

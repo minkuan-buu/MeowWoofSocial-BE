@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MeowWoofSocial.Business.ApplicationMiddleware;
+using MeowWoofSocial.Business.Services.CloudServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
@@ -11,9 +12,11 @@ using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
 using MeowWoofSocial.Data.Repositories.PostRepositories;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,6 +25,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
     public class PostServices : IPostServices
     {
         private readonly IPostRepositories _postRepo;
+        private readonly ICloudStorage _cloudStorage;
         private readonly IMapper _mapper;
         private readonly IHashtagRepositories _hashtagRepo;
         private readonly IUserRepositories _userRepo;
@@ -29,8 +33,9 @@ namespace MeowWoofSocial.Business.Services.PostServices
         private readonly IPostReactionRepositories _postReactionRepo;
         private readonly IUserFollowingRepositories _userFollowingRepo;
 
-        public PostServices(IPostRepositories postRepo, IMapper mapper, IHashtagRepositories hashtagRepo, IUserRepositories userRepo, IPostAttachmentRepositories postAttachmentRepositories, IPostReactionRepositories postReactionRepositories, IUserFollowingRepositories userFollowingRepositories)
+        public PostServices(IPostRepositories postRepo, IMapper mapper, IHashtagRepositories hashtagRepo, IUserRepositories userRepo, IPostAttachmentRepositories postAttachmentRepositories, IPostReactionRepositories postReactionRepositories, IUserFollowingRepositories userFollowingRepositories, ICloudStorage cloudStorage)
         {
+            _cloudStorage = cloudStorage;
             _postRepo = postRepo;
             _mapper = mapper;
             _hashtagRepo = hashtagRepo;
@@ -52,8 +57,9 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     throw new CustomException("You are banned from posting due to violate of terms!");
                 }
-
+                var NewPostId = Guid.NewGuid();
                 var postEntity = _mapper.Map<Post>(post);
+                postEntity.Id = NewPostId;
                 postEntity.UserId = user.Id;
                 postEntity.CreateAt = DateTime.Now;
                 postEntity.Status = GeneralStatusEnums.Active.ToString();
@@ -62,15 +68,21 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 if (post.Attachment != null)
                 {
-                    var attachments = post.Attachment.Select(att => new PostAttachment
+                    string filePath = $"post/${NewPostId}/attachments";
+                    List<string> GetStringURL = await _cloudStorage.UploadFile(post.Attachment, filePath);
+                    List<PostAttachment> ListInsertAttachment = new();
+                    foreach(var link in GetStringURL)
                     {
-                        Id = Guid.NewGuid(),
-                        PostId = postEntity.Id,
-                        Attachment = att,
-                        Status = GeneralStatusEnums.Active.ToString()
-                    }).ToList();
-                    postEntity.PostAttachments = attachments;
-                    await _postAttachmentRepo.InsertRange(attachments);
+                        PostAttachment newAttachment = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PostId = postEntity.Id,
+                            Attachment = link,
+                            Status = GeneralStatusEnums.Active.ToString()
+                        };
+                        ListInsertAttachment.Add(newAttachment);
+                    }
+                    await _postAttachmentRepo.InsertRange(ListInsertAttachment);
                 }
 
                 if (post.HashTag != null)
@@ -105,7 +117,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
-                    includeProperties: "Follower.Posts.PostReactions.User"
+                    includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
                 );
 
                 var followedPosts = new List<PostDetailResModel>();
@@ -118,7 +130,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         {
                             Id = followerPost.Id,
                             author = _mapper.Map<PostAuthorResModel>(following.Follower),
-                            Attachments = _mapper.Map<List<PostAttachmentResModel>>(followerPost.PostAttachments),
+                            Attachment = _mapper.Map<List<PostAttachmentResModel>>(followerPost.PostAttachments),
+                            Hashtag = _mapper.Map<List<PostHashtagResModel>>(followerPost.PostHashtags),
                             Content = followerPost.Content,
                             CreateAt = followerPost.CreateAt,
                             Status = followerPost.Status,
@@ -153,7 +166,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 var nonFollowedPosts = await _postRepo.GetList(
                     x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId),
-                    includeProperties: "User,PostReactions.User"
+                    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
                 );
 
                 var otherPosts = new List<PostDetailResModel>();
@@ -163,7 +176,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     {
                         Id = post.Id,
                         author = _mapper.Map<PostAuthorResModel>(post.User),
-                        Attachments = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
+                        Attachment = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
+                        Hashtag = _mapper.Map<List<PostHashtagResModel>>(post.PostHashtags),
                         Content = post.Content,
                         CreateAt = post.CreateAt,
                         Status = post.Status,
