@@ -4,6 +4,8 @@ using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
+using Microsoft.Data.SqlClient;
+using MimeKit.Text;
 
 namespace MeowWoofSocial.Business.MapperProfiles
 {
@@ -13,8 +15,9 @@ namespace MeowWoofSocial.Business.MapperProfiles
         {
 
             CreateMap<User, UserLoginResModel>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)));
-            
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Avartar, opt => opt.MapFrom(src => src.Avartar));
+
             CreateMap<UserRegisterReqModel, User>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
@@ -43,6 +46,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<Post, PostDetailResModel>()
                 .ForMember(dest => dest.author, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachment, opt => opt.MapFrom(src => src.PostAttachments
                     .Select(x => new PostAttachmentResModel
                     {
@@ -73,19 +77,24 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
-                        Content = x.Content,
+                        Content = TextConvert.ConvertToUnicodeEscape(x.Content),
                         Attachment = x.Attachment,
                         Author = new PostAuthorResModel
-                        {
-                            Id = x.User.Id,
-                            Name = x.User.Name
-                        },
+                    {
+                        Id = x.User.Id,
+                        Name = x.User.Name
+                    },
                         CreatedAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
                     }).ToList()));
 
             CreateMap<PostReaction, ReactionAuthorModel>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name));
+
+            CreateMap<UserFollowingReqModel, UserFollowing>()
+                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId));
+
         }
     }
 }

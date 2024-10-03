@@ -27,4 +27,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         //[RegularExpression(@"^\d{10}$", ErrorMessage = "The PhoneNumber must be exactly 10 digits.")]
         public string? Phone { get; set; }
     }
+
+    public class UserFollowingReqModel()
+    {
+        public Guid UserId { get; set; }
+    }
 }
