@@ -116,7 +116,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
 
-                // Lấy thời gian tạo bài viết cuối cùng (lastPost)
                 DateTime? lastPostCreateAt = null;
                 if (newsFeedReq.lastPostId.HasValue)
                 {
@@ -127,7 +126,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     }
                 }
 
-                // Load posts from followed users
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
                     includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
@@ -137,7 +135,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     .SelectMany(f => f.Follower.Posts)
                     .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
                     .OrderByDescending(p => p.CreateAt)
-                    .Take(newsFeedReq.PageSize) // Limit to page size
+                    .Take(newsFeedReq.PageSize) 
                     .ToList();
 
                 var followedPosts = new List<PostDetailResModel>();
@@ -147,7 +145,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     followedPosts.Add(postDetail);
                 }
 
-                // If followed posts are not enough, load additional posts from non-followed users
                 int remainingPostsCount = newsFeedReq.PageSize - followedPosts.Count;
                 var nonFollowedPosts = new List<PostDetailResModel>();
                 if (remainingPostsCount > 0)
@@ -170,7 +167,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     }
                 }
 
-                // Combine followed and non-followed posts
                 var combinedPosts = followedPosts.Concat(nonFollowedPosts).ToList();
 
                 return new ListDataResultModel<PostDetailResModel>
@@ -184,7 +180,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
             }
         }
 
-        // Helper function to map post details
         private PostDetailResModel MapPostDetail(Post post)
         {
             return new PostDetailResModel
@@ -219,6 +214,68 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     })
                     .ToList()
             };
+        }
+
+        public async Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token)
+        {
+            var result = new DataResultModel<PostUpdateResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id && x.UserId == userId);
+
+                if (post == null)
+                {
+                    throw new CustomException("Post not found or you do not have permission to update this post");
+                }
+
+                if (post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Cannot update an inactive post");
+                }
+
+                post.Content = postUpdateReq.Content;
+                post.UpdateAt = DateTime.Now;
+
+                if (postUpdateReq.Attachment != null && postUpdateReq.Attachment.Count > 0)
+                {
+                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachment, $"post/{post.Id}/attachments");
+                    foreach (var attachment in attachments)
+                    {
+                        var postAttachment = new PostAttachment
+                        {
+                            Id = Guid.NewGuid(),
+                            PostId = post.Id,
+                            Attachment = attachment,
+                            Status = GeneralStatusEnums.Active.ToString()
+                        };
+                        await _postAttachmentRepo.Insert(postAttachment);
+                    }
+                }
+
+                if (postUpdateReq.HashTag != null)
+                {
+                    var hashtags = postUpdateReq.HashTag.Select(ht => new PostHashtag
+                    {
+                        Id = Guid.NewGuid(), 
+                        PostId = post.Id,
+                        Hashtag = ht,
+                        Status = GeneralStatusEnums.Active.ToString()
+                    }).ToList();
+                    post.PostHashtags = hashtags;
+                    await _hashtagRepo.InsertRange(hashtags);
+                }
+                await _postRepo.Update(post);
+
+                var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User");
+
+                result.Data = _mapper.Map<PostUpdateResModel>(updatedPost);
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
         }
     }
 }
