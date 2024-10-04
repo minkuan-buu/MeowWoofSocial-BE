@@ -116,7 +116,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
 
-                // Lấy thời gian tạo bài viết cuối cùng (lastPost)
                 DateTime? lastPostCreateAt = null;
                 if (newsFeedReq.lastPostId.HasValue)
                 {
@@ -127,7 +126,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     }
                 }
 
-                // Load posts from followed users
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
                     includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
@@ -137,7 +135,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     .SelectMany(f => f.Follower.Posts)
                     .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
                     .OrderByDescending(p => p.CreateAt)
-                    .Take(newsFeedReq.PageSize) // Limit to page size
+                    .Take(newsFeedReq.PageSize) 
                     .ToList();
 
                 var followedPosts = new List<PostDetailResModel>();
@@ -147,7 +145,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     followedPosts.Add(postDetail);
                 }
 
-                // If followed posts are not enough, load additional posts from non-followed users
                 int remainingPostsCount = newsFeedReq.PageSize - followedPosts.Count;
                 var nonFollowedPosts = new List<PostDetailResModel>();
                 if (remainingPostsCount > 0)
@@ -170,7 +167,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     }
                 }
 
-                // Combine followed and non-followed posts
                 var combinedPosts = followedPosts.Concat(nonFollowedPosts).ToList();
 
                 return new ListDataResultModel<PostDetailResModel>
@@ -184,41 +180,190 @@ namespace MeowWoofSocial.Business.Services.PostServices
             }
         }
 
-        // Helper function to map post details
         private PostDetailResModel MapPostDetail(Post post)
         {
             return new PostDetailResModel
             {
                 Id = post.Id,
-                author = _mapper.Map<PostAuthorResModel>(post.User),
-                Attachment = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
-                Hashtag = _mapper.Map<List<PostHashtagResModel>>(post.PostHashtags),
-                Content = post.Content,
-                CreateAt = post.CreateAt,
-                Status = post.Status,
-                updatedAt = post.UpdateAt,
+                author = new PostAuthorResModel
+                {
+                    Id = post.User.Id,
+                    Name = post.User.Name,
+                    Avatar = post.User.Avartar
+                },
+                Content = TextConvert.ConvertToUnicodeEscape(post.Content),
+                Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList(),
+                Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
+                {
+                    Id = x.Id,
+                    Hashtag = x.Hashtag
+                }).ToList(),
                 Feeling = post.PostReactions
-                    .Where(x => x.Type.Equals(PostReactionType.Feeling.ToString()))
+                    .Where(x => x.Type == PostReactionType.Feeling.ToString())
                     .Select(x => new FeelingPostResModel
                     {
                         Id = x.Id,
                         TypeReact = x.TypeReact,
-                        Author = _mapper.Map<PostAuthorResModel>(x.User)
-                    })
-                    .ToList(),
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        }
+                    }).ToList(),
                 Comment = post.PostReactions
-                    .Where(x => x.Type.Equals(PostReactionType.Comment.ToString()))
+                    .Where(x => x.Type == PostReactionType.Comment.ToString())
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
-                        Content = x.Content,
-                        Attachment = x.Attachment,
-                        Author = _mapper.Map<PostAuthorResModel>(x.User),
-                        CreatedAt = x.CreateAt,
+                        Content = TextConvert.ConvertToUnicodeEscape(x.Content),
+                        Attachments = post.PostAttachments
+                            .Where(pa => pa.PostId == x.PostId)
+                            .Select(pa => new PostAttachmentResModel
+                            {
+                                Id = pa.Id,
+                                Attachment = pa.Attachment
+                            }).ToList(),
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        },
+                        CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
-                    })
-                    .ToList()
+                    }).ToList(),
+                CreateAt = post.CreateAt,
+                UpdatedAt = post.UpdateAt
             };
+        }
+
+        public async Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token)
+        {
+            var result = new DataResultModel<PostUpdateResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id && x.UserId == userId);
+
+                if (post == null)
+                {
+                    throw new CustomException("Post not found or you do not have permission to update this post");
+                }
+
+                if (post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Cannot update an inactive post");
+                }
+
+                post.Content = postUpdateReq.Content;
+                post.UpdateAt = DateTime.Now;
+
+                if (postUpdateReq.Attachments != null && postUpdateReq.Attachments.Count > 0)
+                {
+                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachments, $"post/{post.Id}/attachments");
+                    foreach (var attachment in attachments)
+                    {
+                        var postAttachment = new PostAttachment
+                        {
+                            Id = Guid.NewGuid(),
+                            PostId = post.Id,
+                            Attachment = attachment,
+                            Status = GeneralStatusEnums.Active.ToString()
+                        };
+                        await _postAttachmentRepo.Insert(postAttachment);
+                    }
+                }
+
+                if (postUpdateReq.HashTag != null)
+                {
+                    var hashtags = postUpdateReq.HashTag.Select(ht => new PostHashtag
+                    {
+                        Id = Guid.NewGuid(), 
+                        PostId = post.Id,
+                        Hashtag = ht,
+                        Status = GeneralStatusEnums.Active.ToString()
+                    }).ToList();
+                    post.PostHashtags = hashtags;
+                    await _hashtagRepo.InsertRange(hashtags);
+                }
+                await _postRepo.Update(post);
+
+                var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User");
+
+                result.Data = _mapper.Map<PostUpdateResModel>(updatedPost);
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+
+        public async Task<DataResultModel<CommentPostResModel>> CreateComment(CommentCreateReqModel commentReq, string token)
+        {
+            var result = new DataResultModel<CommentPostResModel>();
+
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(x => x.Id == commentReq.PostId);
+                if (post == null)
+                {
+                    throw new CustomException("Post not found");
+                }
+
+                if (post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Cannot comment on an inactive post");
+                }
+               
+                var NewpostReactiontId = Guid.NewGuid();
+                var postReaction = _mapper.Map<PostReaction>(commentReq);
+                postReaction.Id = NewpostReactiontId;
+                postReaction.PostId = commentReq.PostId;
+                postReaction.Content = TextConvert.ConvertToUnicodeEscape(commentReq.Content);
+                postReaction.Type = PostReactionType.Comment.ToString();
+                postReaction.CreateAt = DateTime.Now;
+                postReaction.UserId = userId;
+
+                var attachmentResModels = new List<PostAttachmentResModel>();
+
+                if (commentReq.Attachments != null && commentReq.Attachments.Any())
+                {
+                    string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
+                    var attachments = await _cloudStorage.UploadFile(commentReq.Attachments, filePath);
+                    foreach (var attachment in attachments)
+                    {
+                        var postAttachment = new PostAttachment
+                        {
+                            Id = Guid.NewGuid(),
+                            PostId = postReaction.PostId,
+                            Attachment = attachment,
+                            Status = GeneralStatusEnums.Active.ToString()
+                        };
+                        await _postAttachmentRepo.Insert(postAttachment);
+                        attachmentResModels.Add(new PostAttachmentResModel
+                        {
+                            Id = postAttachment.Id,
+                            Attachment = postAttachment.Attachment
+                        });
+                    }
+                }
+
+                await _postReactionRepo.Insert(postReaction);
+
+                var commentRes = _mapper.Map<CommentPostResModel>(postReaction);
+                commentRes.Attachments = attachmentResModels;
+                result.Data = commentRes;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPost("create-post")]
-        public async Task<IActionResult> Login([FromForm] PostCreateReqModel post)
+        public async Task<IActionResult> CreatePost([FromForm] PostCreateReqModel post)
         {
             try
             {
@@ -40,6 +40,21 @@ namespace MeowWoofSocial.API.Controllers
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _postServices.GetNewsFeed(token, newsFeedReq);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("update-post")]
+        public async Task<IActionResult> UpdatePost([FromForm] PostUpdateReqModel postUpdateReq)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _postServices.UpdatePost(postUpdateReq, token);
                 return Ok(result);
             }
             catch (CustomException ex)

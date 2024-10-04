@@ -13,5 +13,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
     {
         Task<DataResultModel<PostCreateResModel>> CreatePost(PostCreateReqModel post, string token);
         Task<ListDataResultModel<PostDetailResModel>> GetNewsFeed(string token, NewsFeedReq newsFeedReq);
+        Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token);
+        Task<DataResultModel<CommentPostResModel>> CreateComment(CommentCreateReqModel commentReq, string token);
     }
 }
