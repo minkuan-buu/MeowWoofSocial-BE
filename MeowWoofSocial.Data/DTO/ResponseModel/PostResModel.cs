@@ -94,4 +94,14 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid UserId { get; set; }
         public Guid FollowerId { get; set; }
     }
+
+    public class PostUpdateResModel
+    {
+        public Guid Id { get; set; }
+        public PostAuthorResModel Author { get; set; }
+        public string Content { get; set; }
+        public List<PostAttachmentResModel> Attachments { get; set; }
+        public List<PostHashtagResModel> Hashtags { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
 }

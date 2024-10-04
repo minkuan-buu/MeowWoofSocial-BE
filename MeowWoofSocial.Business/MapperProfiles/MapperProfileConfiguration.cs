@@ -95,6 +95,15 @@ namespace MeowWoofSocial.Business.MapperProfiles
                  .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                  .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId));
 
+            CreateMap<PostUpdateReqModel, Post>();
+
+            CreateMap<Post, PostUpdateResModel>()
+                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
+                {
+                    Id = src.User.Id,
+                    Name = src.User.Name,
+                    Avatar = src.User.Avartar,
+                }));
         }
     }
 }
