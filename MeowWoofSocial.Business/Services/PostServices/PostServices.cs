@@ -71,7 +71,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     string filePath = $"post/${NewPostId}/attachments";
                     List<string> GetStringURL = await _cloudStorage.UploadFile(post.Attachment, filePath);
                     List<PostAttachment> ListInsertAttachment = new();
-                    foreach(var link in GetStringURL)
+                    foreach (var link in GetStringURL)
                     {
                         PostAttachment newAttachment = new()
                         {
@@ -97,7 +97,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     postEntity.PostHashtags = hashtags;
                     await _hashtagRepo.InsertRange(hashtags);
                 }
-                
+
                 var newPost = await _postRepo.GetSingle(x => x.Id == postEntity.Id, includeProperties: "PostAttachments,PostHashtags,User");
                 var postResModel = _mapper.Map<PostCreateResModel>(newPost);
                 result.Data = postResModel;
@@ -109,119 +109,116 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
             return result;
         }
-        public async Task<ListDataResultModel<PostDetailResModel>> GetNewsFeed(string token)
+
+        public async Task<ListDataResultModel<PostDetailResModel>> GetNewsFeed(string token, NewsFeedReq newsFeedReq)
         {
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
 
+                // Lấy thời gian tạo bài viết cuối cùng (lastPost)
+                DateTime? lastPostCreateAt = null;
+                if (newsFeedReq.lastPostId.HasValue)
+                {
+                    var lastPost = await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value);
+                    if (lastPost != null)
+                    {
+                        lastPostCreateAt = lastPost.CreateAt;
+                    }
+                }
+
+                // Load posts from followed users
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
                     includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
                 );
 
+                var followedPostsPaging = followingEntities
+                    .SelectMany(f => f.Follower.Posts)
+                    .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
+                    .OrderByDescending(p => p.CreateAt)
+                    .Take(newsFeedReq.PageSize) // Limit to page size
+                    .ToList();
+
                 var followedPosts = new List<PostDetailResModel>();
-
-                foreach (var following in followingEntities)
+                foreach (var followerPost in followedPostsPaging)
                 {
-                    foreach (var followerPost in following.Follower.Posts)
+                    var postDetail = MapPostDetail(followerPost);
+                    followedPosts.Add(postDetail);
+                }
+
+                // If followed posts are not enough, load additional posts from non-followed users
+                int remainingPostsCount = newsFeedReq.PageSize - followedPosts.Count;
+                var nonFollowedPosts = new List<PostDetailResModel>();
+                if (remainingPostsCount > 0)
+                {
+                    var nonFollowedPostsEntities = await _postRepo.GetList(
+                        x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId)
+                             && (!lastPostCreateAt.HasValue || x.CreateAt < lastPostCreateAt.Value),
+                        includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
+                    );
+
+                    var nonFollowedPostsPaging = nonFollowedPostsEntities
+                        .OrderByDescending(p => p.CreateAt)
+                        .Take(remainingPostsCount)
+                        .ToList();
+
+                    foreach (var post in nonFollowedPostsPaging)
                     {
-                        var postDetail = new PostDetailResModel()
-                        {
-                            Id = followerPost.Id,
-                            author = _mapper.Map<PostAuthorResModel>(following.Follower),
-                            Attachment = _mapper.Map<List<PostAttachmentResModel>>(followerPost.PostAttachments),
-                            Hashtag = _mapper.Map<List<PostHashtagResModel>>(followerPost.PostHashtags),
-                            Content = followerPost.Content,
-                            CreateAt = followerPost.CreateAt,
-                            Status = followerPost.Status,
-                            updatedAt = followerPost.UpdateAt,
-                            Feeling = followerPost.PostReactions
-                                .Where(x => x.Type.Equals(PostReactionType.Feeling.ToString()))
-                                .Select(x => new FeelingPostResModel
-                                {
-                                    Id = x.Id,
-                                    TypeReact = x.TypeReact,
-                                    Author = _mapper.Map<PostAuthorResModel>(x.User)
-                                })
-                                .ToList(),
-
-                            Comment = followerPost.PostReactions
-                                .Where(x => x.Type.Equals(PostReactionType.Comment.ToString()))
-                                .Select(x => new CommentPostResModel
-                                {
-                                    Id = x.Id,
-                                    Content = x.Content,
-                                    Attachment = x.Attachment,
-                                    Author = _mapper.Map<PostAuthorResModel>(x.User),
-                                    CreatedAt = x.CreateAt,
-                                    UpdatedAt = x.UpdateAt
-                                })
-                                .ToList()
-                        };
-
-                        followedPosts.Add(postDetail);
+                        var postDetail = MapPostDetail(post);
+                        nonFollowedPosts.Add(postDetail);
                     }
                 }
 
-                var nonFollowedPosts = await _postRepo.GetList(
-                    x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId),
-                    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
-                );
-
-                var otherPosts = new List<PostDetailResModel>();
-                foreach (var post in nonFollowedPosts)
-                {
-                    var postDetail = new PostDetailResModel()
-                    {
-                        Id = post.Id,
-                        author = _mapper.Map<PostAuthorResModel>(post.User),
-                        Attachment = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
-                        Hashtag = _mapper.Map<List<PostHashtagResModel>>(post.PostHashtags),
-                        Content = post.Content,
-                        CreateAt = post.CreateAt,
-                        Status = post.Status,
-                        updatedAt = post.UpdateAt,
-                        Feeling = post.PostReactions
-                            .Where(x => x.Type.Equals(PostReactionType.Feeling.ToString()))
-                            .Select(x => new FeelingPostResModel
-                            {
-                                Id = x.Id,
-                                TypeReact = x.TypeReact,
-                                Author = _mapper.Map<PostAuthorResModel>(x.User)
-                            })
-                            .ToList(),
-
-                        Comment = post.PostReactions
-                            .Where(x => x.Type.Equals(PostReactionType.Comment.ToString()))
-                            .Select(x => new CommentPostResModel
-                            {
-                                Id = x.Id,
-                                Content = x.Content,
-                                Attachment = x.Attachment,
-                                Author = _mapper.Map<PostAuthorResModel>(x.User),
-                                CreatedAt = x.CreateAt,
-                                UpdatedAt = x.UpdateAt
-                            })
-                            .ToList()
-                    };
-
-                    otherPosts.Add(postDetail);
-                }
-
-                var newsFeed = followedPosts.OrderByDescending(p => p.CreateAt)
-                    .Concat(otherPosts.OrderByDescending(p => p.CreateAt))
-                    .ToList();
+                // Combine followed and non-followed posts
+                var combinedPosts = followedPosts.Concat(nonFollowedPosts).ToList();
 
                 return new ListDataResultModel<PostDetailResModel>
                 {
-                    Data = newsFeed
+                    Data = combinedPosts
                 };
             }
             catch (Exception ex)
             {
                 throw new CustomException($"Error fetching news feed: {ex.Message}");
             }
+        }
+
+        // Helper function to map post details
+        private PostDetailResModel MapPostDetail(Post post)
+        {
+            return new PostDetailResModel
+            {
+                Id = post.Id,
+                author = _mapper.Map<PostAuthorResModel>(post.User),
+                Attachment = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
+                Hashtag = _mapper.Map<List<PostHashtagResModel>>(post.PostHashtags),
+                Content = post.Content,
+                CreateAt = post.CreateAt,
+                Status = post.Status,
+                updatedAt = post.UpdateAt,
+                Feeling = post.PostReactions
+                    .Where(x => x.Type.Equals(PostReactionType.Feeling.ToString()))
+                    .Select(x => new FeelingPostResModel
+                    {
+                        Id = x.Id,
+                        TypeReact = x.TypeReact,
+                        Author = _mapper.Map<PostAuthorResModel>(x.User)
+                    })
+                    .ToList(),
+                Comment = post.PostReactions
+                    .Where(x => x.Type.Equals(PostReactionType.Comment.ToString()))
+                    .Select(x => new CommentPostResModel
+                    {
+                        Id = x.Id,
+                        Content = x.Content,
+                        Attachment = x.Attachment,
+                        Author = _mapper.Map<PostAuthorResModel>(x.User),
+                        CreatedAt = x.CreateAt,
+                        UpdatedAt = x.UpdateAt
+                    })
+                    .ToList()
+            };
         }
     }
 }

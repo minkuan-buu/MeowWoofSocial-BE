@@ -15,7 +15,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
         {
 
             CreateMap<User, UserLoginResModel>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
                 .ForMember(dest => dest.Avartar, opt => opt.MapFrom(src => src.Avartar));
 
             CreateMap<UserRegisterReqModel, User>()

@@ -27,4 +27,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public string HashTag { get; set; } = null!;
     }
 
+    public class NewsFeedReq
+    {
+        public int PageSize { get; set; }
+        public Guid? lastPostId { get; set; } = null;
+    }
 }

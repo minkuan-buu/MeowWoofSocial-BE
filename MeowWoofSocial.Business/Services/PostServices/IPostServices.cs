@@ -12,6 +12,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
     public interface IPostServices
     {
         Task<DataResultModel<PostCreateResModel>> CreatePost(PostCreateReqModel post, string token);
-        Task<ListDataResultModel<PostDetailResModel>> GetNewsFeed(string token);
+        Task<ListDataResultModel<PostDetailResModel>> GetNewsFeed(string token, NewsFeedReq newsFeedReq);
     }
 }
