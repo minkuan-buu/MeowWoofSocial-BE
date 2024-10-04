@@ -47,13 +47,13 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<Post, PostDetailResModel>()
                 .ForMember(dest => dest.author, opt => opt.MapFrom(src => src.User))
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
-                .ForMember(dest => dest.Attachment, opt => opt.MapFrom(src => src.PostAttachments
+                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments
                     .Select(x => new PostAttachmentResModel
                     {
                         Id = x.Id,
                         Attachment = x.Attachment
                     }).ToList()))
-                .ForMember(dest => dest.Hashtag, opt => opt.MapFrom(src => src.PostHashtags
+                .ForMember(dest => dest.Hashtags, opt => opt.MapFrom(src => src.PostHashtags
                     .Select(x => new PostHashtagResModel
                     {
                         Id = x.Id,
@@ -78,13 +78,19 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     {
                         Id = x.Id,
                         Content = TextConvert.ConvertToUnicodeEscape(x.Content),
-                        Attachment = x.Attachment,
+                        Attachments = src.PostAttachments
+                    .Where(pa => pa.PostId == x.PostId)
+                    .Select(pa => new PostAttachmentResModel
+                    {
+                        Id = pa.Id,
+                        Attachment = pa.Attachment
+                    }).ToList(),
                         Author = new PostAuthorResModel
                     {
                         Id = x.User.Id,
                         Name = x.User.Name
                     },
-                        CreatedAt = x.CreateAt,
+                        CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
                     }).ToList()));
 
@@ -104,6 +110,29 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     Name = src.User.Name,
                     Avatar = src.User.Avartar,
                 }));
+
+            CreateMap<CommentCreateReqModel, PostReaction>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Attachment, opt => opt.Ignore())
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Comment.ToString()))
+                .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
+
+            CreateMap<PostReaction, CommentPostResModel>()
+                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
+                {
+                    Id = src.User.Id,
+                    Name = src.User.Name,
+                    Avatar = src.User.Avartar,
+                }))
+                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.Post.PostReactions
+                    .Where(pa => pa.PostId == src.PostId) 
+                    .Select(x => new PostAttachmentResModel
+                    {
+                        Id = x.Id,
+                        Attachment = x.Attachment
+                    }).ToList()));
+
         }
     }
 }
