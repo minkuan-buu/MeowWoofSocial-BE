@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MeowWoofSocial.API.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/posts")]
     [ApiController]
     public class PostController : ControllerBase
     {
@@ -33,13 +33,13 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
 
-        [HttpPost("get-news-feed")]
-        public async Task<IActionResult> GetNewsFeed()
+        [HttpGet("news-feed")]
+        public async Task<IActionResult> GetNewsFeed([FromQuery]NewsFeedReq newsFeedReq)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _postServices.GetNewsFeed(token);
+                var result = await _postServices.GetNewsFeed(token, newsFeedReq);
                 return Ok(result);
             }
             catch (CustomException ex)
