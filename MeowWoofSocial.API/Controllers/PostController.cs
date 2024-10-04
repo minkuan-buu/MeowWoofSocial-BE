@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MeowWoofSocial.API.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/posts")]
     [ApiController]
     public class PostController : ControllerBase
     {
