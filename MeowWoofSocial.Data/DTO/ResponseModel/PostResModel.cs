@@ -24,6 +24,8 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public string Content { get; set; } = null!;
         public List<PostAttachmentResModel> Attachments { get; set; } = new();
         public List<PostHashtagResModel> Hashtags { get; set; } = new();
+        public List<FeelingPostResModel> Feeling { get; set; } = new();
+        public List<CommentPostResModel> Comment { get; set; } = new();
         public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
@@ -45,13 +47,13 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid Id { get; set; }
         public PostAuthorResModel author { get; set; }
         public string Content { get; set; } = null!;
-        public List<PostAttachmentResModel> Attachment { get; set; } = new();
-        public List<PostHashtagResModel> Hashtag { get; set; } = new();
+        public List<PostAttachmentResModel> Attachments { get; set; } = new();
+        public List<PostHashtagResModel> Hashtags { get; set; } = new();
         public string Status { get; set; } = null!;
         public List<FeelingPostResModel> Feeling { get; set; } = new();
         public List<CommentPostResModel> Comment { get; set; } = new();
         public DateTime CreateAt { get; set; }
-        public DateTime? updatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 
     public class FeelingPostResModel
@@ -65,9 +67,9 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
         public string Content { get; set; } = null!;
-        public string? Attachment { get; set; }
+        public List<PostAttachmentResModel> Attachments { get; set; }
         public PostAuthorResModel Author { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
 
@@ -76,10 +78,10 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid Id { get; set; }
         public ReactionAuthorModel Author { get; set; }
         public string Type { get; set; }
-        public string? content { get; set; }
-        public string? attachment { get; set; }
+        public string? Content { get; set; }
+        public string? Attachment { get; set; }
         public string? TypeReact { get; set; }
-        public DateTime createdAt { get; set; }
+        public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
 
@@ -104,4 +106,5 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public List<PostHashtagResModel> Hashtags { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
 }

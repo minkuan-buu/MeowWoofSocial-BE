@@ -185,34 +185,58 @@ namespace MeowWoofSocial.Business.Services.PostServices
             return new PostDetailResModel
             {
                 Id = post.Id,
-                author = _mapper.Map<PostAuthorResModel>(post.User),
-                Attachment = _mapper.Map<List<PostAttachmentResModel>>(post.PostAttachments),
-                Hashtag = _mapper.Map<List<PostHashtagResModel>>(post.PostHashtags),
-                Content = post.Content,
-                CreateAt = post.CreateAt,
-                Status = post.Status,
-                updatedAt = post.UpdateAt,
+                author = new PostAuthorResModel
+                {
+                    Id = post.User.Id,
+                    Name = post.User.Name,
+                    Avatar = post.User.Avartar
+                },
+                Content = TextConvert.ConvertToUnicodeEscape(post.Content),
+                Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList(),
+                Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
+                {
+                    Id = x.Id,
+                    Hashtag = x.Hashtag
+                }).ToList(),
                 Feeling = post.PostReactions
-                    .Where(x => x.Type.Equals(PostReactionType.Feeling.ToString()))
+                    .Where(x => x.Type == PostReactionType.Feeling.ToString())
                     .Select(x => new FeelingPostResModel
                     {
                         Id = x.Id,
                         TypeReact = x.TypeReact,
-                        Author = _mapper.Map<PostAuthorResModel>(x.User)
-                    })
-                    .ToList(),
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        }
+                    }).ToList(),
                 Comment = post.PostReactions
-                    .Where(x => x.Type.Equals(PostReactionType.Comment.ToString()))
+                    .Where(x => x.Type == PostReactionType.Comment.ToString())
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
-                        Content = x.Content,
-                        Attachment = x.Attachment,
-                        Author = _mapper.Map<PostAuthorResModel>(x.User),
-                        CreatedAt = x.CreateAt,
+                        Content = TextConvert.ConvertToUnicodeEscape(x.Content),
+                        Attachments = post.PostAttachments
+                            .Where(pa => pa.PostId == x.PostId)
+                            .Select(pa => new PostAttachmentResModel
+                            {
+                                Id = pa.Id,
+                                Attachment = pa.Attachment
+                            }).ToList(),
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        },
+                        CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
-                    })
-                    .ToList()
+                    }).ToList(),
+                CreateAt = post.CreateAt,
+                UpdatedAt = post.UpdateAt
             };
         }
 
@@ -237,9 +261,9 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 post.Content = postUpdateReq.Content;
                 post.UpdateAt = DateTime.Now;
 
-                if (postUpdateReq.Attachment != null && postUpdateReq.Attachment.Count > 0)
+                if (postUpdateReq.Attachments != null && postUpdateReq.Attachments.Count > 0)
                 {
-                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachment, $"post/{post.Id}/attachments");
+                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachments, $"post/{post.Id}/attachments");
                     foreach (var attachment in attachments)
                     {
                         var postAttachment = new PostAttachment
@@ -270,6 +294,70 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User");
 
                 result.Data = _mapper.Map<PostUpdateResModel>(updatedPost);
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+
+        public async Task<DataResultModel<CommentPostResModel>> CreateComment(CommentCreateReqModel commentReq, string token)
+        {
+            var result = new DataResultModel<CommentPostResModel>();
+
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(x => x.Id == commentReq.PostId);
+                if (post == null)
+                {
+                    throw new CustomException("Post not found");
+                }
+
+                if (post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Cannot comment on an inactive post");
+                }
+               
+                var NewpostReactiontId = Guid.NewGuid();
+                var postReaction = _mapper.Map<PostReaction>(commentReq);
+                postReaction.Id = NewpostReactiontId;
+                postReaction.PostId = commentReq.PostId;
+                postReaction.Content = TextConvert.ConvertToUnicodeEscape(commentReq.Content);
+                postReaction.Type = PostReactionType.Comment.ToString();
+                postReaction.CreateAt = DateTime.Now;
+                postReaction.UserId = userId;
+
+                var attachmentResModels = new List<PostAttachmentResModel>();
+
+                if (commentReq.Attachments != null && commentReq.Attachments.Any())
+                {
+                    string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
+                    var attachments = await _cloudStorage.UploadFile(commentReq.Attachments, filePath);
+                    foreach (var attachment in attachments)
+                    {
+                        var postAttachment = new PostAttachment
+                        {
+                            Id = Guid.NewGuid(),
+                            PostId = postReaction.PostId,
+                            Attachment = attachment,
+                            Status = GeneralStatusEnums.Active.ToString()
+                        };
+                        await _postAttachmentRepo.Insert(postAttachment);
+                        attachmentResModels.Add(new PostAttachmentResModel
+                        {
+                            Id = postAttachment.Id,
+                            Attachment = postAttachment.Attachment
+                        });
+                    }
+                }
+
+                await _postReactionRepo.Insert(postReaction);
+
+                var commentRes = _mapper.Map<CommentPostResModel>(postReaction);
+                commentRes.Attachments = attachmentResModels;
+                result.Data = commentRes;
             }
             catch (Exception ex)
             {
