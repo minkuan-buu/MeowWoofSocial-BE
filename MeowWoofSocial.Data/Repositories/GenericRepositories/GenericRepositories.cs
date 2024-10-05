@@ -53,7 +53,7 @@ namespace MeowWoofSocial.Data.Repositories.GenericRepositories
                 query = query.Skip(validPageIndex * validPageSize).Take(validPageSize);
             }
 
-            return query;
+            return query.AsSplitQuery();
         }
 
         public async Task<IEnumerable<T>> GetList(

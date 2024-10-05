@@ -116,36 +116,32 @@ namespace MeowWoofSocial.Business.Services.PostServices
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
 
+                // Tối ưu hóa lastPostCreateAt
                 DateTime? lastPostCreateAt = null;
                 if (newsFeedReq.lastPostId.HasValue)
                 {
-                    var lastPost = await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value);
-                    if (lastPost != null)
-                    {
-                        lastPostCreateAt = lastPost.CreateAt;
-                    }
+                    lastPostCreateAt = (await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value))?.CreateAt;
                 }
 
+                // Truy vấn người theo dõi và bài viết của họ
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
                     includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
                 );
 
+                // Tối ưu hóa việc lấy bài viết
                 var followedPostsPaging = followingEntities
                     .SelectMany(f => f.Follower.Posts)
                     .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
                     .OrderByDescending(p => p.CreateAt)
-                    .Take(newsFeedReq.PageSize) 
+                    .Take(newsFeedReq.PageSize)
+                    .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
                     .ToList();
 
-                var followedPosts = new List<PostDetailResModel>();
-                foreach (var followerPost in followedPostsPaging)
-                {
-                    var postDetail = MapPostDetail(followerPost);
-                    followedPosts.Add(postDetail);
-                }
+                // Đếm số lượng bài viết còn thiếu
+                int remainingPostsCount = newsFeedReq.PageSize - followedPostsPaging.Count;
 
-                int remainingPostsCount = newsFeedReq.PageSize - followedPosts.Count;
+                // Lấy bài viết không theo dõi
                 var nonFollowedPosts = new List<PostDetailResModel>();
                 if (remainingPostsCount > 0)
                 {
@@ -155,19 +151,14 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
                     );
 
-                    var nonFollowedPostsPaging = nonFollowedPostsEntities
+                    nonFollowedPosts = nonFollowedPostsEntities
                         .OrderByDescending(p => p.CreateAt)
                         .Take(remainingPostsCount)
+                        .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
                         .ToList();
-
-                    foreach (var post in nonFollowedPostsPaging)
-                    {
-                        var postDetail = MapPostDetail(post);
-                        nonFollowedPosts.Add(postDetail);
-                    }
                 }
 
-                var combinedPosts = followedPosts.Concat(nonFollowedPosts).ToList();
+                var combinedPosts = followedPostsPaging.Concat(nonFollowedPosts).ToList();
 
                 return new ListDataResultModel<PostDetailResModel>
                 {
@@ -180,6 +171,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
             }
         }
 
+        // Tối ưu hóa MapPostDetail với Select trực tiếp
         private PostDetailResModel MapPostDetail(Post post)
         {
             return new PostDetailResModel
@@ -239,6 +231,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 UpdatedAt = post.UpdateAt
             };
         }
+
 
         public async Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token)
         {
