@@ -78,18 +78,16 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     {
                         Id = x.Id,
                         Content = TextConvert.ConvertToUnicodeEscape(x.Content),
-                        Attachments = src.PostAttachments
-                    .Where(pa => pa.PostId == x.PostId)
-                    .Select(pa => new PostAttachmentResModel
-                    {
-                        Id = pa.Id,
-                        Attachment = pa.Attachment
-                    }).ToList(),
+                        Attachment = new PostAttachmentResModel()
+                        {
+                            Id = x.Id,
+                            Attachment = x.Attachment
+                        },
                         Author = new PostAuthorResModel
-                    {
-                        Id = x.User.Id,
-                        Name = x.User.Name
-                    },
+                        {
+                            Id = x.User.Id,
+                            Name = x.User.Name
+                        },
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
                     }).ToList()));
@@ -118,20 +116,16 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Comment.ToString()))
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
 
-            CreateMap<PostReaction, CommentPostResModel>()
+            CreateMap<PostReaction, CommentPostResModel>();
+                
+            CreateMap<PostReaction, CommentCreatePostResModel>()
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
                     Name = src.User.Name,
                     Avatar = src.User.Avartar,
-                }))
-                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.Post.PostReactions
-                    .Where(pa => pa.PostId == src.PostId) 
-                    .Select(x => new PostAttachmentResModel
-                    {
-                        Id = x.Id,
-                        Attachment = x.Attachment
-                    }).ToList()));
+                }));
+                
 
         }
     }
