@@ -29,4 +29,16 @@ public class CloudStorage : ICloudStorage
         }
         return uploadUrl;
     }
+
+    public async Task<string> UploadSingleFile(IFormFile file, string filePath)
+    {
+        using (var stream = new MemoryStream())
+        {
+            await file.CopyToAsync(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            var objectName = $"{filePath}/{file.FileName}";
+            _storageClient.UploadObject(BucketName, objectName, file.ContentType, stream);
+            return $"https://storage.googleapis.com/{BucketName}/{objectName}";
+        }
+    }
 }
