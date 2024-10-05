@@ -67,7 +67,7 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
         public string Content { get; set; } = null!;
-        public List<PostAttachmentResModel> Attachments { get; set; }
+        public PostAttachmentResModel Attachment { get; set; }
         public PostAuthorResModel Author { get; set; }
         public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
@@ -107,4 +107,13 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public DateTime UpdatedAt { get; set; }
     }
 
+    public class CommentCreatePostResModel
+    {   
+        public Guid Id { get; set; }
+        public string Content { get; set; } = null!;
+        public string? Attachment { get; set; } 
+        public PostAuthorResModel Author { get; set; }
+        public DateTime CreateAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
 }

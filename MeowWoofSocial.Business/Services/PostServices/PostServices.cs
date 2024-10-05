@@ -212,13 +212,11 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     {
                         Id = x.Id,
                         Content = TextConvert.ConvertToUnicodeEscape(x.Content),
-                        Attachments = post.PostAttachments
-                            .Where(pa => pa.PostId == x.PostId)
-                            .Select(pa => new PostAttachmentResModel
-                            {
-                                Id = pa.Id,
-                                Attachment = pa.Attachment
-                            }).ToList(),
+                        Attachment = new PostAttachmentResModel()
+                        {
+                            Id = x.Id,
+                            Attachment = x.Attachment,
+                        },
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
@@ -295,13 +293,20 @@ namespace MeowWoofSocial.Business.Services.PostServices
             return result;
         }
 
-        public async Task<DataResultModel<CommentPostResModel>> CreateComment(CommentCreateReqModel commentReq, string token)
+        public async Task<DataResultModel<CommentCreatePostResModel>> CreateComment(CommentCreateReqModel commentReq, string token)
         {
-            var result = new DataResultModel<CommentPostResModel>();
+            var result = new DataResultModel<CommentCreatePostResModel>();
 
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var user = await _userRepo.GetSingle(x => x.Id == userId);
+
+                if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+                {
+                    throw new CustomException("You are banned from posting due to violate of terms!");
+                }
+
                 var post = await _postRepo.GetSingle(x => x.Id == commentReq.PostId);
                 if (post == null)
                 {
@@ -312,7 +317,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     throw new CustomException("Cannot comment on an inactive post");
                 }
-               
+                
                 var NewpostReactiontId = Guid.NewGuid();
                 var postReaction = _mapper.Map<PostReaction>(commentReq);
                 postReaction.Id = NewpostReactiontId;
@@ -321,36 +326,19 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 postReaction.Type = PostReactionType.Comment.ToString();
                 postReaction.CreateAt = DateTime.Now;
                 postReaction.UserId = userId;
-
-                var attachmentResModels = new List<PostAttachmentResModel>();
-
-                if (commentReq.Attachments != null && commentReq.Attachments.Any())
-                {
-                    string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
-                    var attachments = await _cloudStorage.UploadFile(commentReq.Attachments, filePath);
-                    foreach (var attachment in attachments)
-                    {
-                        var postAttachment = new PostAttachment
-                        {
-                            Id = Guid.NewGuid(),
-                            PostId = postReaction.PostId,
-                            Attachment = attachment,
-                            Status = GeneralStatusEnums.Active.ToString()
-                        };
-                        await _postAttachmentRepo.Insert(postAttachment);
-                        attachmentResModels.Add(new PostAttachmentResModel
-                        {
-                            Id = postAttachment.Id,
-                            Attachment = postAttachment.Attachment
-                        });
-                    }
-                }
+                string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
+                var attachments = await _cloudStorage.UploadSingleFile(commentReq.Attachment, filePath);
+                postReaction.Attachment = attachments;
 
                 await _postReactionRepo.Insert(postReaction);
+                result.Data = _mapper.Map<CommentCreatePostResModel>(postReaction);
+                result.Data.Author = new PostAuthorResModel()
+                {
+                    Id = user.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(user.Name),
+                    Avatar = user.Avartar
+                };
 
-                var commentRes = _mapper.Map<CommentPostResModel>(postReaction);
-                commentRes.Attachments = attachmentResModels;
-                result.Data = commentRes;
             }
             catch (Exception ex)
             {
