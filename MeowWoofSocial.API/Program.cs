@@ -18,6 +18,7 @@ using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using Google.Cloud.Storage.V1;
 using MeowWoofSocial.Business.Services.CloudServices;
 using MeowWoofSocial.Business.Services.UserFollowingServices;
+using MeowWoofSocial.Business.Services.ReactionServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,6 +93,7 @@ builder.Services.AddScoped<IUserFollowingRepositories, UserFollowingRepositories
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPostServices, PostServices>();
 builder.Services.AddScoped<IUserFollowingServices, UserFollowingServices>();
+builder.Services.AddScoped<IPostReactionServices, PostReactionServices>();
 //=========================================== CORS ================================================
 
 builder.Services.AddCors(options =>
