@@ -1,4 +1,5 @@
 ﻿using MeowWoofSocial.Business.Services.PostServices;
+using MeowWoofSocial.Business.Services.ReactionServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
 using Microsoft.AspNetCore.Http;
@@ -8,13 +9,13 @@ namespace MeowWoofSocial.API.Controllers
 {
     [Route("api/comment")]
     [ApiController]
-    public class CommentController : ControllerBase
+    public class PostReactionController : ControllerBase
     {
-        private readonly IPostServices _postServices;
+        private readonly IPostReactionServices _postReactionServices;
 
-        public CommentController(IPostServices postServices)
+        public PostReactionController(IPostReactionServices postReactionServices)
         {
-            _postServices = postServices;
+            _postReactionServices = postReactionServices;
         }
 
         [HttpPost("create-comment")]
@@ -23,7 +24,7 @@ namespace MeowWoofSocial.API.Controllers
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _postServices.CreateComment(commentReq, token);
+                var result = await _postReactionServices.CreateComment(commentReq, token);
                 return Ok(result);
             }
             catch (CustomException ex)
