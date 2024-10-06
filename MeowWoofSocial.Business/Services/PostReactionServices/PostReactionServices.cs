@@ -54,7 +54,7 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
 
                 if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
                 {
-                    throw new CustomException("You are banned from posting due to violate of terms!");
+                    throw new CustomException("You are banned from comment due to violate of terms!");
                 }
 
                 var post = await _postRepo.GetSingle(x => x.Id == commentReq.PostId);
@@ -97,5 +97,55 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
             return result;
         }
 
+        public async Task<DataResultModel<FeelingCreatePostResModel>> CreateFeeling(FeelingCreateReqModel feelingReq, string token)
+        {
+            var result = new DataResultModel<FeelingCreatePostResModel>();
+
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var user = await _userRepo.GetSingle(x => x.Id == userId);
+
+                if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+                {
+                    throw new CustomException("You are banned from reaction due to violate of terms!");
+                }
+
+                var post = await _postRepo.GetSingle(x => x.Id == feelingReq.PostId);
+                if (post == null)
+                {
+                    throw new CustomException("Post not found");
+                }
+
+                if (post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Cannot reaction on an inactive post");
+                }
+
+                var NewpostReactiontId = Guid.NewGuid();
+                var postReaction = _mapper.Map<PostReaction>(feelingReq);
+                postReaction.Id = NewpostReactiontId;
+                postReaction.PostId = feelingReq.PostId;
+                postReaction.TypeReact = feelingReq.TypeReact;
+                postReaction.Type = PostReactionType.Comment.ToString();
+                postReaction.CreateAt = DateTime.Now;
+                postReaction.UserId = userId;
+               
+                await _postReactionRepo.Insert(postReaction);
+                result.Data = _mapper.Map<FeelingCreatePostResModel>(postReaction);
+                result.Data.Author = new PostAuthorResModel()
+                {
+                    Id = user.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(user.Name),
+                    Avatar = user.Avartar
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
     }
 }

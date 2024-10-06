@@ -11,5 +11,6 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
     public interface IPostReactionServices
     {
         Task<DataResultModel<CommentCreatePostResModel>> CreateComment(CommentCreateReqModel commentReq, string token);
+        Task<DataResultModel<FeelingCreatePostResModel>> CreateFeeling(FeelingCreateReqModel feelingReq, string token);
     }
 }
