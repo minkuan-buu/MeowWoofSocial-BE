@@ -116,4 +116,13 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
+
+    public class FeelingCreatePostResModel
+    {
+        public Guid Id { get; set; }
+        public string TypeReact { get; set; } = null!;
+        public PostAuthorResModel Author { get; set; }
+        public DateTime CreateAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
 }

@@ -121,8 +121,19 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     Name = src.User.Name,
                     Avatar = src.User.Avartar,
                 }));
-                
 
+            CreateMap<PostReaction, FeelingCreatePostResModel>()
+                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
+                {
+                    Id = src.User.Id,
+                    Name = src.User.Name,
+                    Avatar = src.User.Avartar,
+                }));
+
+            CreateMap<FeelingCreateReqModel, PostReaction>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Feeling.ToString()))
+                .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
         }
     }
 }

@@ -289,59 +289,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
             return result;
         }
 
-        public async Task<DataResultModel<CommentCreatePostResModel>> CreateComment(CommentCreateReqModel commentReq, string token)
-        {
-            var result = new DataResultModel<CommentCreatePostResModel>();
-
-            try
-            {
-                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var user = await _userRepo.GetSingle(x => x.Id == userId);
-
-                if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
-                {
-                    throw new CustomException("You are banned from posting due to violate of terms!");
-                }
-
-                var post = await _postRepo.GetSingle(x => x.Id == commentReq.PostId);
-                if (post == null)
-                {
-                    throw new CustomException("Post not found");
-                }
-
-                if (post.Status == GeneralStatusEnums.Inactive.ToString())
-                {
-                    throw new CustomException("Cannot comment on an inactive post");
-                }
-                
-                var NewpostReactiontId = Guid.NewGuid();
-                var postReaction = _mapper.Map<PostReaction>(commentReq);
-                postReaction.Id = NewpostReactiontId;
-                postReaction.PostId = commentReq.PostId;
-                postReaction.Content = TextConvert.ConvertToUnicodeEscape(commentReq.Content);
-                postReaction.Type = PostReactionType.Comment.ToString();
-                postReaction.CreateAt = DateTime.Now;
-                postReaction.UserId = userId;
-                string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
-                var attachments = await _cloudStorage.UploadSingleFile(commentReq.Attachment, filePath);
-                postReaction.Attachment = attachments;
-
-                await _postReactionRepo.Insert(postReaction);
-                result.Data = _mapper.Map<CommentCreatePostResModel>(postReaction);
-                result.Data.Author = new PostAuthorResModel()
-                {
-                    Id = user.Id,
-                    Name = TextConvert.ConvertFromUnicodeEscape(user.Name),
-                    Avatar = user.Avartar
-                };
-
-            }
-            catch (Exception ex)
-            {
-                throw new CustomException($"An error occurred: {ex.Message}");
-            }
-            return result;
-        }
+        
     }
 }
 
