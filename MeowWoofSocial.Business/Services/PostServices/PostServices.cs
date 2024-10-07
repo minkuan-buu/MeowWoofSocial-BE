@@ -212,11 +212,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     {
                         Id = x.Id,
                         Content = TextConvert.ConvertToUnicodeEscape(x.Content),
-                        Attachment = new PostAttachmentResModel()
-                        {
-                            Id = x.Id,
-                            Attachment = x.Attachment,
-                        },
+                        Attachment = x.Attachment,
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
