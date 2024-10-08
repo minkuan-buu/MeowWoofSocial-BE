@@ -208,6 +208,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     }).ToList(),
                 Comment = post.PostReactions
                     .Where(x => x.Type == PostReactionType.Comment.ToString())
+                    .OrderByDescending(x => x.CreateAt)
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
