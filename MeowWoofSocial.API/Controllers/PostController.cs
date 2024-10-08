@@ -62,5 +62,20 @@ namespace MeowWoofSocial.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("{id:Guid}")]
+        public async Task<IActionResult> GetPostById(Guid id)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _postServices.GetPostByID(id, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
