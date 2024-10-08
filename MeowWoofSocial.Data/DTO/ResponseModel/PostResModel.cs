@@ -67,7 +67,7 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
         public string Content { get; set; } = null!;
-        public PostAttachmentResModel Attachment { get; set; }
+        public string? Attachment { get; set; }
         public PostAuthorResModel Author { get; set; }
         public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
