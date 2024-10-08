@@ -68,17 +68,28 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                     throw new CustomException("Cannot comment on an inactive post");
                 }
 
+                if (commentReq.Content == null && commentReq.Attachment == null)
+                {
+                    throw new CustomException("Comment must have content or attachment");
+                }
+
                 var NewpostReactiontId = Guid.NewGuid();
                 var postReaction = _mapper.Map<PostReaction>(commentReq);
                 postReaction.Id = NewpostReactiontId;
                 postReaction.PostId = commentReq.PostId;
-                postReaction.Content = TextConvert.ConvertToUnicodeEscape(commentReq.Content);
+                if (commentReq.Content != null)
+                {
+                    postReaction.Content = TextConvert.ConvertToUnicodeEscape(commentReq.Content);
+                }
                 postReaction.Type = PostReactionType.Comment.ToString();
                 postReaction.CreateAt = DateTime.Now;
                 postReaction.UserId = userId;
                 string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
-                var attachments = await _cloudStorage.UploadSingleFile(commentReq.Attachment, filePath);
-                postReaction.Attachment = attachments;
+                if(commentReq.Attachment != null)
+                {
+                    var attachments = await _cloudStorage.UploadSingleFile(commentReq.Attachment, filePath);
+                    postReaction.Attachment = attachments;
+                }
 
                 await _postReactionRepo.Insert(postReaction);
                 result.Data = _mapper.Map<CommentCreatePostResModel>(postReaction);
