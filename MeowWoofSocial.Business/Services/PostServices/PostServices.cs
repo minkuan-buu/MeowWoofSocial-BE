@@ -208,6 +208,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     }).ToList(),
                 Comment = post.PostReactions
                     .Where(x => x.Type == PostReactionType.Comment.ToString())
+                    .OrderByDescending(x => x.CreateAt)
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
@@ -268,7 +269,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     var hashtags = postUpdateReq.HashTag.Select(ht => new PostHashtag
                     {
-                        Id = Guid.NewGuid(), 
+                        Id = Guid.NewGuid(),
                         PostId = post.Id,
                         Hashtag = ht,
                         Status = GeneralStatusEnums.Active.ToString()
@@ -289,7 +290,35 @@ namespace MeowWoofSocial.Business.Services.PostServices
             return result;
         }
 
-        
+        public async Task<DataResultModel<PostDetailResModel>> GetPostByID(Guid postId, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+
+                var postEntity = await _postRepo.GetSingle(
+                    x => x.Id == postId,
+                    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
+                );
+
+                if (postEntity == null)
+                {
+                    throw new CustomException("Post not found");
+                }
+
+                var postDetail = MapPostDetail(postEntity);
+
+                return new DataResultModel<PostDetailResModel>
+                {
+                    Data = postDetail
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error fetching post by ID: {ex.Message}");
+            }
+        }
     }
 }
+
 
