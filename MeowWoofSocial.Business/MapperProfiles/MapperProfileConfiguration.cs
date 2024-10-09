@@ -30,6 +30,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.PostHashtags, opt => opt.Ignore());
 
             CreateMap<Post, PostCreateResModel>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments))
                 .ForMember(dest => dest.Hashtags, opt => opt.MapFrom(src => src.PostHashtags))
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.User));
