@@ -2,6 +2,7 @@
 using MeowWoofSocial.Business.Services.UserFollowingServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPost("follow-user")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> FollowUser([FromBody] UserFollowingReqModel userFollowing)
         {
             try

@@ -68,7 +68,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 if (post.Attachment != null)
                 {
-                    string filePath = $"post/${NewPostId}/attachments";
+                    string filePath = $"post/{NewPostId}/attachments";
                     List<string> GetStringURL = await _cloudStorage.UploadFile(post.Attachment, filePath);
                     List<PostAttachment> ListInsertAttachment = new();
                     foreach (var link in GetStringURL)
@@ -180,10 +180,10 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 author = new PostAuthorResModel
                 {
                     Id = post.User.Id,
-                    Name = post.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
                     Avatar = post.User.Avartar
                 },
-                Content = TextConvert.ConvertToUnicodeEscape(post.Content),
+                Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
                 Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
                 {
                     Id = x.Id,
@@ -212,7 +212,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
-                        Content = TextConvert.ConvertToUnicodeEscape(x.Content),
+                        Content = TextConvert.ConvertFromUnicodeEscape(x.Content),
                         Attachment = x.Attachment,
                         Author = new PostAuthorResModel
                         {
@@ -246,7 +246,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     throw new CustomException("Cannot update an inactive post");
                 }
 
-                post.Content = postUpdateReq.Content;
+                post.Content = TextConvert.ConvertToUnicodeEscape(postUpdateReq.Content);
                 post.UpdateAt = DateTime.Now;
 
                 if (postUpdateReq.Attachments != null && postUpdateReq.Attachments.Count > 0)

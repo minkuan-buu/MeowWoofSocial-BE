@@ -138,7 +138,7 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 postReaction.Id = NewpostReactiontId;
                 postReaction.PostId = feelingReq.PostId;
                 postReaction.TypeReact = feelingReq.TypeReact;
-                postReaction.Type = PostReactionType.Comment.ToString();
+                postReaction.Type = PostReactionType.Feeling.ToString();
                 postReaction.CreateAt = DateTime.Now;
                 postReaction.UserId = userId;
                
@@ -157,6 +157,60 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 throw new CustomException($"An error occurred: {ex.Message}");
             }
             return result;
+        }
+
+        public async Task<DataResultModel<FeelingCreatePostResModel>> UpdateFeeling(FeelingCreateReqModel feelingReq, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var user = await _userRepo.GetSingle(x => x.Id == userId);
+
+                if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+                {
+                    throw new CustomException("You are banned from reaction due to violate of terms!");
+                }
+
+                var post = await _postRepo.GetSingle(x => x.Id == feelingReq.PostId);
+                if (post == null || post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Post not found!");
+                }
+
+                var OldFeeling = await _postReactionRepo.GetSingle(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(feelingReq.PostId));
+
+                if (OldFeeling == null)
+                {
+                    throw new CustomException("Reaction not found!");
+                }
+
+                if (OldFeeling != null)
+                {
+                    await _postReactionRepo.Delete(OldFeeling);
+                }
+
+                if(feelingReq.TypeReact != null)
+                {
+                    var NewFeeling = _mapper.Map<PostReaction>(feelingReq);
+                    NewFeeling.UserId = userId;
+                    await _postReactionRepo.Insert(NewFeeling);
+                    var GetNewFeeling = await _postReactionRepo.GetSingle(x => x.Id.Equals(NewFeeling.Id));
+                    var ResultNewFeeling = _mapper.Map<FeelingCreatePostResModel>(GetNewFeeling);
+                    return new DataResultModel<FeelingCreatePostResModel>()
+                    {
+                        Data = ResultNewFeeling
+                    };
+                }
+
+                return new DataResultModel<FeelingCreatePostResModel>()
+                {
+                    Data = null
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
         }
     }
 }

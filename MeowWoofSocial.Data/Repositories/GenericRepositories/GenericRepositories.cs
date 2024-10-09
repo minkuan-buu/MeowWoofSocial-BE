@@ -96,5 +96,17 @@ namespace MeowWoofSocial.Data.Repositories.GenericRepositories
             context.Entry(entity).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
+
+        public async Task Delete(T entity)
+        {
+            if (context.Entry(entity).State == EntityState.Detached)
+            {
+                dbSet.Attach(entity);
+            }
+
+            context.Entry(entity).State = EntityState.Deleted;
+
+            await context.SaveChangesAsync();
+        }
     }
 }
