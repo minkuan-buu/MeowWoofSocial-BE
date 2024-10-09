@@ -246,7 +246,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     throw new CustomException("Cannot update an inactive post");
                 }
 
-                post.Content = postUpdateReq.Content;
+                post.Content = TextConvert.ConvertToUnicodeEscape(postUpdateReq.Content);
                 post.UpdateAt = DateTime.Now;
 
                 if (postUpdateReq.Attachments != null && postUpdateReq.Attachments.Count > 0)
