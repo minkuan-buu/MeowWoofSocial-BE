@@ -177,11 +177,30 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                     throw new CustomException("Post not found");
                 }
 
+                var OldFeeling = await _postReactionRepo.GetSingle(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(feelingReq.PostId));
+
+                if(OldFeeling != null)
+                {
+                    await _postReactionRepo.Delete(OldFeeling);
+                }
+
+                if(feelingReq.TypeReact != null)
+                {
+                    var NewFeeling = _mapper.Map<PostReaction>(feelingReq);
+                    NewFeeling.UserId = userId;
+                    await _postReactionRepo.Insert(NewFeeling);
+                    var GetNewFeeling = await _postReactionRepo.GetSingle(x => x.Id.Equals(NewFeeling.Id));
+                    var ResultNewFeeling = _mapper.Map<FeelingCreatePostResModel>(GetNewFeeling);
+                    return new DataResultModel<FeelingCreatePostResModel>()
+                    {
+                        Data = ResultNewFeeling
+                    };
+                }
+
                 return new DataResultModel<FeelingCreatePostResModel>()
                 {
-                    Data = new FeelingCreatePostResModel()
+                    Data = null
                 };
-
             }
             catch (Exception ex)
             {

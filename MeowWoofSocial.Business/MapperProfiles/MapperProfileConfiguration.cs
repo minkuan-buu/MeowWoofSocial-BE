@@ -71,7 +71,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = x.User.Name
+                            Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                         }
                     }).ToList()))
                 .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.PostReactions
@@ -84,7 +84,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = x.User.Name
+                            Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                         },
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
@@ -103,7 +103,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
-                    Name = src.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
                 }));
 
@@ -121,7 +121,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
-                    Name = src.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
                 }));
 
@@ -129,7 +129,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
-                    Name = src.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
                 }));
 
