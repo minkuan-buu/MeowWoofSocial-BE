@@ -25,6 +25,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Password, opt => opt.Ignore());
 
             CreateMap<PostCreateReqModel, Post>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.PostAttachments, opt => opt.Ignore())
                 .ForMember(dest => dest.PostHashtags, opt => opt.Ignore());
 
@@ -112,7 +113,8 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Comment.ToString()))
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
 
-            CreateMap<PostReaction, CommentPostResModel>();
+            CreateMap<PostReaction, CommentPostResModel>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)));
                 
             CreateMap<PostReaction, CommentCreatePostResModel>()
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
