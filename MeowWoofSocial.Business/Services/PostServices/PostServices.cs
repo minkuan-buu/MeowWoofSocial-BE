@@ -180,7 +180,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 author = new PostAuthorResModel
                 {
                     Id = post.User.Id,
-                    Name = post.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
                     Avatar = post.User.Avartar
                 },
                 Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
