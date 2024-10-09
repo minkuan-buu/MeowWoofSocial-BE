@@ -183,7 +183,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     Name = post.User.Name,
                     Avatar = post.User.Avartar
                 },
-                Content = TextConvert.ConvertToUnicodeEscape(post.Content),
+                Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
                 Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
                 {
                     Id = x.Id,
@@ -212,7 +212,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     .Select(x => new CommentPostResModel
                     {
                         Id = x.Id,
-                        Content = TextConvert.ConvertToUnicodeEscape(x.Content),
+                        Content = TextConvert.ConvertFromUnicodeEscape(x.Content),
                         Attachment = x.Attachment,
                         Author = new PostAuthorResModel
                         {

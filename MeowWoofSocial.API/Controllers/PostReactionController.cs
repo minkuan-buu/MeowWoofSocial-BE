@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MeowWoofSocial.API.Controllers
 {
-    [Route("api/comment")]
+    [Route("api/react")]
     [ApiController]
     public class PostReactionController : ControllerBase
     {
