@@ -138,7 +138,7 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 postReaction.Id = NewpostReactiontId;
                 postReaction.PostId = feelingReq.PostId;
                 postReaction.TypeReact = feelingReq.TypeReact;
-                postReaction.Type = PostReactionType.Comment.ToString();
+                postReaction.Type = PostReactionType.Feeling.ToString();
                 postReaction.CreateAt = DateTime.Now;
                 postReaction.UserId = userId;
                
