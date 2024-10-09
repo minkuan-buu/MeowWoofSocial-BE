@@ -29,7 +29,7 @@ namespace MeowWoofSocial.API.Middleware
             var requestPath = Context.Request.Path;
 
             // Allow the login endpoint to be bypassed
-            if (requestPath.StartsWithSegments("/api/authentication/login"))
+            if (requestPath.StartsWithSegments("/api/authentication/login") || requestPath.StartsWithSegments("/api/authentication/register"))
             {
                 return AuthenticateResult.NoResult(); // Cho phép request đi qua mà không xác thực
             }
