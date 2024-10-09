@@ -68,7 +68,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
 
                 if (post.Attachment != null)
                 {
-                    string filePath = $"post/${NewPostId}/attachments";
+                    string filePath = $"post/{NewPostId}/attachments";
                     List<string> GetStringURL = await _cloudStorage.UploadFile(post.Attachment, filePath);
                     List<PostAttachment> ListInsertAttachment = new();
                     foreach (var link in GetStringURL)
