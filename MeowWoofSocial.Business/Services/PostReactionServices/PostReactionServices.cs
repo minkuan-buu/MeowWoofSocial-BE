@@ -158,5 +158,35 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
             }
             return result;
         }
+
+        public async Task<DataResultModel<FeelingCreatePostResModel>> UpdateFeeling(FeelingCreateReqModel feelingReq, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var user = await _userRepo.GetSingle(x => x.Id == userId);
+
+                if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+                {
+                    throw new CustomException("You are banned from reaction due to violate of terms!");
+                }
+
+                var post = await _postRepo.GetSingle(x => x.Id == feelingReq.PostId);
+                if (post == null || post.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Post not found");
+                }
+
+                return new DataResultModel<FeelingCreatePostResModel>()
+                {
+                    Data = new FeelingCreatePostResModel()
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+        }
     }
 }

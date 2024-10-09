@@ -2,6 +2,7 @@
 using MeowWoofSocial.Business.Services.ReactionServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPost("create-comment")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> CreateComment([FromForm] CommentCreateReqModel commentReq)
         {
             try
@@ -34,12 +36,29 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPost("create-reaction")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> CreateFeeling([FromBody] FeelingCreateReqModel feelingReq)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _postReactionServices.CreateFeeling(feelingReq, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("update-reaction")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> UpdateFeeling([FromBody] FeelingCreateReqModel feelingReq)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _postReactionServices.UpdateFeeling(feelingReq, token);
                 return Ok(result);
             }
             catch (CustomException ex)

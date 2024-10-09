@@ -2,6 +2,7 @@
 using MeowWoofSocial.Business.Services.UserServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPost("create-post")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> CreatePost([FromForm] PostCreateReqModel post)
         {
             try
@@ -34,6 +36,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpGet("news-feed")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> GetNewsFeed([FromQuery]NewsFeedReq newsFeedReq)
         {
             try
@@ -49,6 +52,7 @@ namespace MeowWoofSocial.API.Controllers
         }
 
         [HttpPut("update-post")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> UpdatePost([FromForm] PostUpdateReqModel postUpdateReq)
         {
             try

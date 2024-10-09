@@ -1,54 +1,94 @@
 ﻿using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MeowWoofSocial.API.Middleware
 {
-    public class AuthorizeMiddleware
+    public class AuthorizeMiddleware : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private readonly RequestDelegate _next;
+        private readonly IUserRepositories _userRepositories;
 
-        public AuthorizeMiddleware(RequestDelegate next)
+        // Không cần phải inject HttpContext vào constructor nữa
+        public AuthorizeMiddleware(IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder,
+            ISystemClock clock, IUserRepositories userRepositories)
+            : base(options, logger, encoder, clock)
         {
-            _next = next;
+            _userRepositories = userRepositories;
         }
 
-        public async Task Invoke(HttpContext context, IUserRepositories userRepo)
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+            var requestPath = Context.Request.Path; // Sử dụng Context thay vì _context
+
+            // Allow the login endpoint to be bypassed
+            if (requestPath.StartsWithSegments("/api/authentication/login"))
+            {
+                return AuthenticateResult.NoResult(); // Cho phép request đi qua mà không xác thực
+            }
+
+            // Get the Authorization header
+            string authorizationHeader = Request.Headers["Authorization"];
+
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
+            {
+                return AuthenticateResult.Fail("Authorization header is missing or invalid.");
+            }
+
+            var token = authorizationHeader.Substring("Bearer ".Length).Trim();
+
+            // Validate the JWT token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes("TestingIssuerSigningKeyPTEducationMS@123"); // Use your JWT signing key here
+
             try
             {
-                var requestPath = context.Request.Path;
-
-                if (requestPath.StartsWithSegments("/api/authentication/login"))
+                var claimsPrincipal = tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
-                    await _next.Invoke(context);
-                    return;
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = "TestingJWTIssuerSigningPTEducationMS@123",
+                    ValidAudience = "TestingJWTIssuerSigningPTEducationMS@123",
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                }, out SecurityToken validatedToken);
+
+                // Token is valid, create the authentication ticket
+                var identity = claimsPrincipal.Identity as ClaimsIdentity;
+
+                if (identity == null || !identity.IsAuthenticated)
+                {
+                    return AuthenticateResult.Fail("Unauthorized");
                 }
 
-                var userIdentity = context.User.Identity as ClaimsIdentity;
-                if (!userIdentity.IsAuthenticated)
+                // You can further check user status or other conditions by querying your repository
+                var userIdClaim = identity.FindFirst("userid")?.Value;
+                if (Guid.TryParse(userIdClaim, out var userId))
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    return;
+                    var user = await _userRepositories.GetSingle(u => u.Id == userId);
+                    if (user == null || user.Status.Equals(AccountStatusEnums.Inactive.ToString()))
+                    {
+                        return AuthenticateResult.Fail("User is inactive or not found.");
+                    }
                 }
 
-                var user = await userRepo.GetSingle(u => u.Id.Equals(Guid.Parse(userIdentity.FindFirst("userid").Value)));
-
-                if (user.Status.Equals(AccountStatusEnums.Inactive.ToString()))
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    return;
-                }
-
-                await _next.Invoke(context);
+                var ticket = new AuthenticationTicket(claimsPrincipal, Scheme.Name);
+                return AuthenticateResult.Success(ticket);
             }
-            catch (Exception ex)
+            catch (SecurityTokenException ex)
             {
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                await context.Response.WriteAsync(ex.ToString());
+                return AuthenticateResult.Fail($"Token validation failed: {ex.Message}");
             }
-
         }
     }
+
 }

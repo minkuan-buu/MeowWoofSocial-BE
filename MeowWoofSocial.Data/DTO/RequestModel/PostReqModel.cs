@@ -51,6 +51,6 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     public class FeelingCreateReqModel
     {
         public Guid PostId { get; set; }
-        public string TypeReact { get; set; }
+        public string? TypeReact { get; set; }
     }
 }
