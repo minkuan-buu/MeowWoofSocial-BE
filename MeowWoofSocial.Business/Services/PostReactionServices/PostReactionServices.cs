@@ -174,12 +174,17 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 var post = await _postRepo.GetSingle(x => x.Id == feelingReq.PostId);
                 if (post == null || post.Status == GeneralStatusEnums.Inactive.ToString())
                 {
-                    throw new CustomException("Post not found");
+                    throw new CustomException("Post not found!");
                 }
 
                 var OldFeeling = await _postReactionRepo.GetSingle(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(feelingReq.PostId));
 
-                if(OldFeeling != null)
+                if (OldFeeling == null)
+                {
+                    throw new CustomException("Reaction not found!");
+                }
+
+                if (OldFeeling != null)
                 {
                     await _postReactionRepo.Delete(OldFeeling);
                 }
