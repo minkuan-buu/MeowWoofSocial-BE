@@ -15,7 +15,6 @@ namespace MeowWoofSocial.API.Middleware
     {
         private readonly IUserRepositories _userRepositories;
 
-        // Không cần phải inject HttpContext vào constructor nữa
         public AuthorizeMiddleware(IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
@@ -27,7 +26,7 @@ namespace MeowWoofSocial.API.Middleware
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var requestPath = Context.Request.Path; // Sử dụng Context thay vì _context
+            var requestPath = Context.Request.Path;
 
             // Allow the login endpoint to be bypassed
             if (requestPath.StartsWithSegments("/api/authentication/login"))
@@ -56,11 +55,17 @@ namespace MeowWoofSocial.API.Middleware
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateIssuerSigningKey = true,
-                    ValidateLifetime = true,
+                    ValidateLifetime = true, // Kiểm tra thời gian sống của token
                     ValidIssuer = "TestingJWTIssuerSigningPTEducationMS@123",
                     ValidAudience = "TestingJWTIssuerSigningPTEducationMS@123",
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 }, out SecurityToken validatedToken);
+
+                // Kiểm tra nếu token đã hết hạn
+                if (validatedToken.ValidTo < DateTime.UtcNow)
+                {
+                    return AuthenticateResult.Fail("Token has expired.");
+                }
 
                 // Token is valid, create the authentication ticket
                 var identity = claimsPrincipal.Identity as ClaimsIdentity;
@@ -84,11 +89,21 @@ namespace MeowWoofSocial.API.Middleware
                 var ticket = new AuthenticationTicket(claimsPrincipal, Scheme.Name);
                 return AuthenticateResult.Success(ticket);
             }
+            catch (SecurityTokenExpiredException ex)
+            {
+                // Token đã hết hạn
+                return AuthenticateResult.Fail($"Token has expired: {ex.Message}");
+            }
             catch (SecurityTokenException ex)
             {
+                // Token không hợp lệ
                 return AuthenticateResult.Fail($"Token validation failed: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Lỗi khác
+                return AuthenticateResult.Fail($"An error occurred: {ex.Message}");
             }
         }
     }
-
 }

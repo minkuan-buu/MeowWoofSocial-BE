@@ -86,7 +86,7 @@ public class Authentication
             issuer: Issuser,
             audience: Issuser,
             claims: Claims,
-            expires: DateTime.Now.AddHours(5),
+            expires: DateTime.Now.AddMonths(1),
             signingCredentials: Credential
             );
         var Encodetoken = new JwtSecurityTokenHandler().WriteToken(Token);
