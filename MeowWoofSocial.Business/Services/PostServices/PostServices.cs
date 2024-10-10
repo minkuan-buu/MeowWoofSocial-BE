@@ -91,7 +91,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     {
                         Id = Guid.NewGuid(),
                         PostId = postEntity.Id,
-                        Hashtag = ht,
+                        Hashtag = TextConvert.ConvertToUnicodeEscape(ht),
                         Status = GeneralStatusEnums.Active.ToString()
                     }).ToList();
                     postEntity.PostHashtags = hashtags;
@@ -193,7 +193,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
                 {
                     Id = x.Id,
-                    Hashtag = x.Hashtag
+                    Hashtag = TextConvert.ConvertFromUnicodeEscape(x.Hashtag)
                 }).ToList(),
                 Feeling = post.PostReactions
                     .Where(x => x.Type == PostReactionType.Feeling.ToString())
