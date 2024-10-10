@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -125,4 +126,12 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public DateTime CreateAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
+
+    public class PostRemoveResModel
+    {
+        public Guid PostId { get; set; }
+        public string Status { get; set; }
+        public DateTime UpdateAt { get; set; }
+    }
+
 }

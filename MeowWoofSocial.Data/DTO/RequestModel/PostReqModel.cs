@@ -53,4 +53,10 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public Guid PostId { get; set; }
         public string? TypeReact { get; set; }
     }
+
+    public class PostRemoveReqModel
+    {
+        public Guid PostId { get; set; }
+    }
+
 }
