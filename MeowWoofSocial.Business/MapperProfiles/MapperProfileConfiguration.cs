@@ -107,6 +107,20 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     Avatar = src.User.Avartar,
                 }));
 
+            CreateMap<CommentUpdateReqModel, PostReaction>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)));
+
+            CreateMap<PostReaction, CommentUpdateResModel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
+                {
+                    Id = src.User.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
+                    Avatar = src.User.Avartar,
+                }));
+
+
             CreateMap<CommentCreateReqModel, PostReaction>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
