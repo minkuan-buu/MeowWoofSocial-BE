@@ -203,7 +203,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = x.User.Name
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
                         }
                     }).ToList(),
                 Comment = post.PostReactions
@@ -217,7 +217,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = x.User.Name
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
                         },
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
