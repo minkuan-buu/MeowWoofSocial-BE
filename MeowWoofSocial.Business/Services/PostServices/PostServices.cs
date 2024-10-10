@@ -133,6 +133,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 var followedPostsPaging = followingEntities
                     .SelectMany(f => f.Follower.Posts)
                     .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
+                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString())) 
                     .OrderByDescending(p => p.CreateAt)
                     .Take(newsFeedReq.PageSize)
                     .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
