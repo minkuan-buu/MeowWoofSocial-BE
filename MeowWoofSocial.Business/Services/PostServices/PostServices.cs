@@ -358,14 +358,14 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     await _hashtagRepo.Update(hashtag);
                 }
 
-                var comments = await _postReactionRepo.GetList(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Comment.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
+                var comments = await _postReactionRepo.GetList(x => x.PostId.Equals(post.Id) && x.Type.Equals(PostReactionType.Comment.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
 
                 foreach (var comment in comments)
                 {
                     await _postReactionRepo.Delete(comment);
                 }
 
-                var feelings = await _postReactionRepo.GetList(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
+                var feelings = await _postReactionRepo.GetList(x => x.PostId.Equals(post.Id) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
 
                 foreach (var feeling in feelings)
                 {

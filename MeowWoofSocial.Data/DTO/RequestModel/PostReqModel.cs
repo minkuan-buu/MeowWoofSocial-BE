@@ -48,6 +48,13 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public IFormFile? Attachment { get; set; }
     }
 
+    public class CommentUpdateReqModel
+    {
+        public Guid Id { get; set; }
+        public string? Content { get; set; }
+        public IFormFile? Attachment { get; set; }
+    }
+
     public class FeelingCreateReqModel
     {
         public Guid PostId { get; set; }

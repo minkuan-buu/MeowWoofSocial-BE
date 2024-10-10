@@ -66,5 +66,21 @@ namespace MeowWoofSocial.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPut("update-comment")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> UpdatePost([FromForm] CommentUpdateReqModel commentUpdateReq)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _postReactionServices.UpdateComment(commentUpdateReq, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
