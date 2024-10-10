@@ -364,6 +364,12 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     await _postReactionRepo.Delete(comment);
                 }
 
+                var feelings = await _postReactionRepo.GetList(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
+
+                foreach (var feeling in feelings)
+                {
+                    await _postReactionRepo.Delete(feeling);
+                }
 
                 var result = _mapper.Map<PostRemoveResModel>(post);
                 return new DataResultModel<PostRemoveResModel> { 
