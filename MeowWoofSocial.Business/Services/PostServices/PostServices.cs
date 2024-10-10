@@ -153,6 +153,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     );
 
                     nonFollowedPosts = nonFollowedPostsEntities
+                        .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
                         .OrderByDescending(p => p.CreateAt)
                         .Take(remainingPostsCount)
                         .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
