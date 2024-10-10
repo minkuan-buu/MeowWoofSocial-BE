@@ -137,6 +137,16 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Feeling.ToString()))
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
+
+            CreateMap<PostRemoveReqModel, Post>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => GeneralStatusEnums.Inactive.ToString()));
+
+
+            CreateMap<Post, PostRemoveResModel>()
+                .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => src.UpdateAt));
+
+
         }
     }
 }
