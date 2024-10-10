@@ -357,6 +357,14 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     await _hashtagRepo.Update(hashtag);
                 }
 
+                var comments = await _postReactionRepo.GetList(x => x.UserId.Equals(userId) && x.Type.Equals(PostReactionType.Comment.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
+
+                foreach (var comment in comments)
+                {
+                    await _postReactionRepo.Delete(comment);
+                }
+
+
                 var result = _mapper.Map<PostRemoveResModel>(post);
                 return new DataResultModel<PostRemoveResModel> { 
                     Data = result 
