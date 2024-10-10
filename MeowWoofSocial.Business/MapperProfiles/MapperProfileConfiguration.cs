@@ -59,7 +59,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     .Select(x => new PostHashtagResModel
                     {
                         Id = x.Id,
-                        Hashtag = x.Hashtag
+                        Hashtag = TextConvert.ConvertFromUnicodeEscape(x.Hashtag)
                     }).ToList()))
                     
                 .ForMember(dest => dest.Feeling, opt => opt.MapFrom(src => src.PostReactions
