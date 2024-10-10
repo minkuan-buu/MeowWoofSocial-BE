@@ -212,5 +212,46 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 throw new CustomException($"An error occurred: {ex.Message}");
             }
         }
+        public async Task<DataResultModel<CommentUpdateResModel>> UpdateComment(CommentUpdateReqModel CommentUpdateReq, string token)
+        {
+            var result = new DataResultModel<CommentUpdateResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var postReaction = await _postReactionRepo.GetSingle(x => x.Id == CommentUpdateReq.Id && x.UserId == userId);
+
+                if (postReaction == null)
+                {
+                    throw new CustomException("Comment not found or you do not have permission to update this comment");
+                }
+
+                if (CommentUpdateReq.Content == null && CommentUpdateReq.Attachment == null)
+                {
+                    throw new CustomException("Comment must have content or attachment");
+                }
+
+                postReaction.Content = TextConvert.ConvertToUnicodeEscape(CommentUpdateReq.Content ?? string.Empty);
+                postReaction.UpdateAt = DateTime.Now;
+
+                string filePath = $"post/{CommentUpdateReq.Id}/comments/{postReaction.Id}/attachments";
+                if (CommentUpdateReq.Attachment != null)
+                {
+                    var attachments = await _cloudStorage.UploadSingleFile(CommentUpdateReq.Attachment, filePath);
+                    postReaction.Attachment = attachments;
+                }
+
+                await _postReactionRepo.Update(postReaction);
+
+                var updatedComment = await _postReactionRepo.GetSingle(x => x.Id == CommentUpdateReq.Id, includeProperties: "User");
+
+                result.Data = _mapper.Map<CommentUpdateResModel>(updatedComment);
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
     }
 }
