@@ -336,7 +336,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 }
                 if (post.Status.Equals(GeneralStatusEnums.Inactive))
                 {
-                    throw new CustomException("Your post has been deleted.");
+                    throw new CustomException("Your post has been deleted before.");
                 }
 
                 post.Status = GeneralStatusEnums.Inactive.ToString();
