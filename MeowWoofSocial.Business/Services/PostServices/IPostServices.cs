@@ -15,6 +15,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
         Task<ListDataResultModel<PostDetailResModel>> GetNewsFeed(string token, NewsFeedReq newsFeedReq);
         Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token);
         Task<DataResultModel<PostDetailResModel>> GetPostByID(Guid postId, string token);
+        Task<DataResultModel<PostRemoveResModel>> RemovePost(PostRemoveReqModel postRemoveReq, string token);
 
     }
 }

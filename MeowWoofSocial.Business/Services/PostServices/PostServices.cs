@@ -319,6 +319,54 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 throw new CustomException($"Error fetching post by ID: {ex.Message}");
             }
         }
+        public async Task<DataResultModel<PostRemoveResModel>> RemovePost(PostRemoveReqModel postRemoveReq, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(p => p.Id == postRemoveReq.PostId);
+
+                if (post == null)
+                {
+                    throw new CustomException("Post not found.");
+                }
+                if (post.UserId != userId)
+                {
+                    throw new CustomException("Post is not belong to user.");
+                }
+                if (post.Status.Equals(GeneralStatusEnums.Inactive))
+                {
+                    throw new CustomException("Your post has been deleted.");
+                }
+
+                post.Status = GeneralStatusEnums.Inactive.ToString();
+                post.UpdateAt = DateTime.Now;
+                await _postRepo.Update(post);
+
+                var attachments = await _postAttachmentRepo.GetList(a => a.PostId == post.Id);
+                foreach (var attachment in attachments)
+                {
+                    attachment.Status = GeneralStatusEnums.Inactive.ToString();
+                    await _postAttachmentRepo.Update(attachment);
+                }
+
+                var hashtags = await _hashtagRepo.GetList(h => h.PostId == post.Id);
+                foreach (var hashtag in hashtags)
+                {
+                    hashtag.Status = GeneralStatusEnums.Inactive.ToString();
+                    await _hashtagRepo.Update(hashtag);
+                }
+
+                var result = _mapper.Map<PostRemoveResModel>(post);
+                return new DataResultModel<PostRemoveResModel> { 
+                    Data = result 
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error removing post: {ex.Message}");
+            }
+        }
     }
 }
 
