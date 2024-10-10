@@ -222,6 +222,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
                     }).ToList(),
+                Status = GeneralStatusEnums.Active.ToString(),
                 CreateAt = post.CreateAt,
                 UpdatedAt = post.UpdateAt
             };
