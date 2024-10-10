@@ -1,4 +1,4 @@
-using MeowWoofSocial.API.Middleware;
+﻿using MeowWoofSocial.API.Middleware;
 using MeowWoofSocial.Business.MapperProfiles;
 using MeowWoofSocial.Business.Services.UserServices;
 using MeowWoofSocial.Data.Entities;
@@ -19,6 +19,7 @@ using Google.Cloud.Storage.V1;
 using MeowWoofSocial.Business.Services.CloudServices;
 using MeowWoofSocial.Business.Services.UserFollowingServices;
 using MeowWoofSocial.Business.Services.ReactionServices;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,8 +65,28 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 builder.Services.AddDbContext<MeowWoofSocialContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+//======================================= AUTHENTICATION ==========================================
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options =>
+//    {
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidIssuer = "TestingJWTIssuerSigningPTEducationMS@123",
+//            ValidAudience = "TestingJWTIssuerSigningPTEducationMS@123",
+//            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("TestingIssuerSigningKeyPTEducationMS@123")),
+//            ValidateIssuer = true,
+//            ValidateAudience = true,
+//            ValidateIssuerSigningKey = true,
+//            ValidateLifetime = true,
+//        };
+//    });
+builder.Services.AddAuthentication("MeowWoofAuthentication")
+    .AddScheme<AuthenticationSchemeOptions, AuthorizeMiddleware>("MeowWoofAuthentication", null);
+
 //========================================== MAPPER ===============================================
 
 builder.Services.AddAutoMapper(typeof(MapperProfileConfiguration).Assembly);
@@ -119,6 +140,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

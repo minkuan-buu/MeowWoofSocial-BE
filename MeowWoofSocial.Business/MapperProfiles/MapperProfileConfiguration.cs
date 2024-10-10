@@ -25,10 +25,12 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Password, opt => opt.Ignore());
 
             CreateMap<PostCreateReqModel, Post>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.PostAttachments, opt => opt.Ignore())
                 .ForMember(dest => dest.PostHashtags, opt => opt.Ignore());
 
             CreateMap<Post, PostCreateResModel>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments))
                 .ForMember(dest => dest.Hashtags, opt => opt.MapFrom(src => src.PostHashtags))
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.User));
@@ -69,7 +71,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = x.User.Name
+                            Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                         }
                     }).ToList()))
                 .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.PostReactions
@@ -82,7 +84,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = x.User.Name
+                            Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                         },
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
@@ -101,7 +103,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
-                    Name = src.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
                 }));
 
@@ -112,13 +114,14 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Comment.ToString()))
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
 
-            CreateMap<PostReaction, CommentPostResModel>();
+            CreateMap<PostReaction, CommentPostResModel>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)));
                 
             CreateMap<PostReaction, CommentCreatePostResModel>()
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
-                    Name = src.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
                 }));
 
@@ -126,7 +129,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
-                    Name = src.User.Name,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
                 }));
 
