@@ -253,5 +253,29 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
             }
             return result;
         }
+
+        public async Task<DataResultModel<CommentDeleteResModel>> DeleteComment(CommentDeleteReqModel commentDeleteReq, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var comment = await _postReactionRepo.GetSingle(c => c.Id == commentDeleteReq.CommentId);
+
+                if (comment == null || comment.UserId != userId)
+                {
+                    throw new CustomException("Comment not found or does not belong to the user.");
+                }
+
+                await _postReactionRepo.Delete(comment);
+
+                var result = _mapper.Map<CommentDeleteResModel>(comment);
+                return new DataResultModel<CommentDeleteResModel> { Data = result };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error deleting comment: {ex.Message}");
+            }
+        }
+
     }
 }
