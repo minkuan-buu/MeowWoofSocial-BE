@@ -66,4 +66,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public Guid PostId { get; set; }
     }
 
+    public class CommentDeleteReqModel
+    {
+        public Guid CommentId { get; set; }
+    }
+
 }

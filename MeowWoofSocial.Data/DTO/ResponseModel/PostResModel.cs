@@ -142,5 +142,9 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public string Status { get; set; }
         public DateTime UpdateAt { get; set; }
     }
+    public class CommentDeleteResModel
+    {
+        public Guid Id { get; set; }
+    }
 
 }
