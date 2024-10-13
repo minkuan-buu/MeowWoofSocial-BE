@@ -160,7 +160,9 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => src.UpdateAt));
 
+            CreateMap<PostReaction, CommentDeleteResModel>();
 
+            CreateMap<CommentDeleteReqModel, PostReaction>();
         }
     }
 }
