@@ -39,16 +39,9 @@ namespace MeowWoofSocial.API.Controllers
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> GetNewsFeed([FromQuery]NewsFeedReq newsFeedReq)
         {
-            try
-            {
-                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _postServices.GetNewsFeed(token, newsFeedReq);
-                return Ok(result);
-            }
-            catch (CustomException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var result = await _postServices.GetNewsFeed(token, newsFeedReq);
+            return Ok(result);
         }
 
         [HttpPut("update-post")]
@@ -70,16 +63,9 @@ namespace MeowWoofSocial.API.Controllers
         [HttpGet("{id:Guid}")]
         public async Task<IActionResult> GetPostById(Guid id)
         {
-            try
-            {
-                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _postServices.GetPostByID(id, token);
-                return Ok(result);
-            }
-            catch (CustomException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var result = await _postServices.GetPostByID(id, token);
+            return Ok(result);
         }
 
         [HttpDelete("delete-post")]
