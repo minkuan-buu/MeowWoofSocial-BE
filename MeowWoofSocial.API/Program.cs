@@ -20,6 +20,9 @@ using MeowWoofSocial.Business.Services.CloudServices;
 using MeowWoofSocial.Business.Services.UserFollowingServices;
 using MeowWoofSocial.Business.Services.ReactionServices;
 using Microsoft.AspNetCore.Authentication;
+using MeowWoofSocial.Data.Repositories.NotificationRepositories;
+using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
+using MeowWoofSocial.Data.Repositories.ReportRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,6 +113,9 @@ builder.Services.AddScoped<IHashtagRepositories, HastagRepositories>();
 builder.Services.AddScoped<IPostAttachmentRepositories, PostAttachmentRepositories>();
 builder.Services.AddScoped<IPostReactionRepositories, PostReactionRepositories>();
 builder.Services.AddScoped<IUserFollowingRepositories, UserFollowingRepositories>();
+builder.Services.AddScoped<INotificationRepositories, NotificationRepositories>();
+builder.Services.AddScoped<IPostStoredRepositories, PostStoredRepositories>();
+builder.Services.AddScoped<IReportRepositories, ReportRepositories>();
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPostServices, PostServices>();

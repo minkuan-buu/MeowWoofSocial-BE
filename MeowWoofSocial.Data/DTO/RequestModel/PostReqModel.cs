@@ -36,7 +36,7 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     public class PostUpdateReqModel
     {
         public Guid Id { get; set; }
-        public string Content { get; set; }
+        public string? Content { get; set; }
         public List<IFormFile>? Attachments { get; set; }
         public string[]? HashTag { get; set; }
     }

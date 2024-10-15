@@ -46,7 +46,7 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     public class PostDetailResModel
     {
         public Guid Id { get; set; }
-        public PostAuthorResModel author { get; set; }
+        public PostAuthorResModel Author { get; set; }
         public string Content { get; set; } = null!;
         public List<PostAttachmentResModel> Attachments { get; set; } = new();
         public List<PostHashtagResModel> Hashtags { get; set; } = new();
@@ -102,10 +102,14 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
         public PostAuthorResModel Author { get; set; }
-        public string Content { get; set; }
-        public List<PostAttachmentResModel> Attachments { get; set; }
-        public List<PostHashtagResModel> Hashtags { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public string Content { get; set; } = null!;
+        public List<PostAttachmentResModel> Attachments { get; set; } = new();
+        public List<PostHashtagResModel> Hashtags { get; set; } = new();
+        public string Status { get; set; } = null!;
+        public List<FeelingPostResModel> Feeling { get; set; } = new();
+        public List<CommentPostResModel> Comment { get; set; } = new();
+        public DateTime CreateAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 
     public class CommentCreatePostResModel

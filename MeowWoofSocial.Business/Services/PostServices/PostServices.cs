@@ -7,9 +7,12 @@ using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.HashtagRepositories;
+using MeowWoofSocial.Data.Repositories.NotificationRepositories;
 using MeowWoofSocial.Data.Repositories.PostAttachmentRepositories;
 using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
 using MeowWoofSocial.Data.Repositories.PostRepositories;
+using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
+using MeowWoofSocial.Data.Repositories.ReportRepositories;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
 using Microsoft.AspNetCore.Http;
@@ -32,14 +35,20 @@ namespace MeowWoofSocial.Business.Services.PostServices
         private readonly IPostAttachmentRepositories _postAttachmentRepo;
         private readonly IPostReactionRepositories _postReactionRepo;
         private readonly IUserFollowingRepositories _userFollowingRepo;
+        private readonly INotificationRepositories _notificationRepo;
+        private readonly IPostStoredRepositories _postStoredRepo;
+        private readonly IReportRepositories _reportRepo;
 
-        public PostServices(IPostRepositories postRepo, IMapper mapper, IHashtagRepositories hashtagRepo, IUserRepositories userRepo, IPostAttachmentRepositories postAttachmentRepositories, IPostReactionRepositories postReactionRepositories, IUserFollowingRepositories userFollowingRepositories, ICloudStorage cloudStorage)
+        public PostServices(IPostRepositories postRepo, IMapper mapper, IHashtagRepositories hashtagRepo, IUserRepositories userRepo, IPostAttachmentRepositories postAttachmentRepositories, IPostReactionRepositories postReactionRepositories, IUserFollowingRepositories userFollowingRepositories, ICloudStorage cloudStorage, INotificationRepositories notificationRepo, IPostStoredRepositories postStoredRepo, IReportRepositories reportRepo)
         {
             _cloudStorage = cloudStorage;
             _postRepo = postRepo;
             _mapper = mapper;
             _hashtagRepo = hashtagRepo;
             _userRepo = userRepo;
+            _postStoredRepo = postStoredRepo;
+            _notificationRepo = notificationRepo;
+            _reportRepo = reportRepo;
             _postAttachmentRepo = postAttachmentRepositories;
             _postReactionRepo = postReactionRepositories;
             _userFollowingRepo = userFollowingRepositories;
@@ -179,7 +188,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
             return new PostDetailResModel
             {
                 Id = post.Id,
-                author = new PostAuthorResModel
+                Author = new PostAuthorResModel
                 {
                     Id = post.User.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
@@ -237,7 +246,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var post = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id && x.UserId == userId);
+                var post = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id && x.UserId == userId, includeProperties: "PostAttachments,PostHashtags");
 
                 if (post == null)
                 {
@@ -248,13 +257,29 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     throw new CustomException("Cannot update an inactive post");
                 }
-
-                post.Content = TextConvert.ConvertToUnicodeEscape(postUpdateReq.Content);
+                if (postUpdateReq.Content != null)
+                {
+                    post.Content = TextConvert.ConvertToUnicodeEscape(postUpdateReq.Content);
+                } else
+                {
+                    throw new CustomException("Content cannot null");
+                }
                 post.UpdateAt = DateTime.Now;
+                await _postRepo.Update(post);
+                if (post.PostAttachments.Count > 0)
+                {
+                    await _postAttachmentRepo.DeleteRange(post.PostAttachments);
+                }
+                if (post.PostHashtags.Count > 0) { 
+                    await _hashtagRepo.DeleteRange(post.PostHashtags);
+                }
 
+                var filePath = $"post/{post.Id}/attachments";
+                await _cloudStorage.DeleteFilesInPathAsync(filePath);
                 if (postUpdateReq.Attachments != null && postUpdateReq.Attachments.Count > 0)
                 {
-                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachments, $"post/{post.Id}/attachments");
+                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachments, filePath);
+                    List<PostAttachment> ListAttachmentAdd = new();
                     foreach (var attachment in attachments)
                     {
                         var postAttachment = new PostAttachment
@@ -264,8 +289,9 @@ namespace MeowWoofSocial.Business.Services.PostServices
                             Attachment = attachment,
                             Status = GeneralStatusEnums.Active.ToString()
                         };
-                        await _postAttachmentRepo.Insert(postAttachment);
+                        ListAttachmentAdd.Add(postAttachment);
                     }
+                    await _postAttachmentRepo.InsertRange(ListAttachmentAdd);
                 }
 
                 if (postUpdateReq.HashTag != null)
@@ -277,12 +303,10 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Hashtag = ht,
                         Status = GeneralStatusEnums.Active.ToString()
                     }).ToList();
-                    post.PostHashtags = hashtags;
                     await _hashtagRepo.InsertRange(hashtags);
                 }
-                await _postRepo.Update(post);
 
-                var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User");
+                var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User,PostReactions.User");
 
                 result.Data = _mapper.Map<PostUpdateResModel>(updatedPost);
             }
@@ -321,12 +345,12 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 throw new CustomException($"Error fetching post by ID: {ex.Message}");
             }
         }
-        public async Task<DataResultModel<PostRemoveResModel>> RemovePost(PostRemoveReqModel postRemoveReq, string token)
+        public async Task<MessageResultModel> RemovePost(PostRemoveReqModel postRemoveReq, string token)
         {
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var post = await _postRepo.GetSingle(p => p.Id == postRemoveReq.PostId);
+                var post = await _postRepo.GetSingle(p => p.Id == postRemoveReq.PostId, includeProperties: "PostAttachments,PostHashtags,Notifications,PostReactions,PostStoreds,Reports");
 
                 if (post == null)
                 {
@@ -341,41 +365,18 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     throw new CustomException("Your post has been deleted before.");
                 }
 
-                post.Status = GeneralStatusEnums.Inactive.ToString();
-                post.UpdateAt = DateTime.Now;
-                await _postRepo.Update(post);
-
-                var attachments = await _postAttachmentRepo.GetList(a => a.PostId == post.Id);
-                foreach (var attachment in attachments)
-                {
-                    attachment.Status = GeneralStatusEnums.Inactive.ToString();
-                    await _postAttachmentRepo.Update(attachment);
-                }
-
-                var hashtags = await _hashtagRepo.GetList(h => h.PostId == post.Id);
-                foreach (var hashtag in hashtags)
-                {
-                    hashtag.Status = GeneralStatusEnums.Inactive.ToString();
-                    await _hashtagRepo.Update(hashtag);
-                }
-
-                var comments = await _postReactionRepo.GetList(x => x.PostId.Equals(post.Id) && x.Type.Equals(PostReactionType.Comment.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
-
-                foreach (var comment in comments)
-                {
-                    await _postReactionRepo.Delete(comment);
-                }
-
-                var feelings = await _postReactionRepo.GetList(x => x.PostId.Equals(post.Id) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
-
-                foreach (var feeling in feelings)
-                {
-                    await _postReactionRepo.Delete(feeling);
-                }
+                await _notificationRepo.DeleteRange(post.Notifications);
+                await _cloudStorage.DeleteFilesInPathAsync($"post/{post.Id}");
+                await _postAttachmentRepo.DeleteRange(post.PostAttachments);
+                await _hashtagRepo.DeleteRange(post.PostHashtags);
+                await _postReactionRepo.DeleteRange(post.PostReactions);
+                await _postStoredRepo.DeleteRange(post.PostStoreds);
+                await _reportRepo.DeleteRange(post.Reports);
+                await _postRepo.Delete(post);
 
                 var result = _mapper.Map<PostRemoveResModel>(post);
-                return new DataResultModel<PostRemoveResModel> { 
-                    Data = result 
+                return new MessageResultModel { 
+                    Message = "Ok" 
                 };
             }
             catch (Exception ex)
