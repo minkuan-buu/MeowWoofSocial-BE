@@ -423,38 +423,32 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 List<PostDetailResModel> userPosts = new();
                 DateTime? lastPostCreateAt = null;
 
-                // Kiểm tra nếu có lastPostId thì lấy thời gian tạo của bài viết cuối cùng
                 if (newsFeedReq.lastPostId.HasValue)
                 {
                     var lastPost = await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value);
                     lastPostCreateAt = lastPost?.CreateAt;
                 }
 
-                // Bước 1: Lấy tất cả các bài viết của người dùng, sắp xếp theo thời gian giảm dần
                 var allUserPosts = await _postRepo.GetList(
-                    x => x.UserId.Equals(userId), // Chỉ lấy bài viết của user
+                    x => x.UserId.Equals(userId),
                     includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
                 );
 
-                // Sắp xếp tất cả bài viết theo thời gian giảm dần (mới nhất trước)
                 allUserPosts = allUserPosts.OrderByDescending(p => p.CreateAt).ToList();
 
-                // Bước 2: Áp dụng lazy load (lọc bài viết cũ hơn bài cuối cùng đã load)
                 if (lastPostCreateAt.HasValue)
                 {
                     allUserPosts = allUserPosts
-                        .Where(p => p.CreateAt < lastPostCreateAt.Value) // Lọc bài viết cũ hơn
+                        .Where(p => p.CreateAt < lastPostCreateAt.Value)
                         .ToList();
                 }
 
-                // Giới hạn số lượng bài viết theo PageSize
                 userPosts = allUserPosts
-                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString())) // Lọc bài viết Active
-                    .Take(newsFeedReq.PageSize) // Giới hạn số lượng bài viết
-                    .Select(MapPostDetail) // Ánh xạ sang PostDetailResModel
+                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                    .Take(newsFeedReq.PageSize)
+                    .Select(MapPostDetail)
                     .ToList();
 
-                // Trả về kết quả
                 return new ListDataResultModel<PostDetailResModel>
                 {
                     Data = userPosts
@@ -462,7 +456,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
             }
             catch (Exception ex)
             {
-                // Ném ra CustomException với chi tiết lỗi
                 throw new CustomException($"An error occurred while fetching posts: {ex.Message}");
             }
         }
