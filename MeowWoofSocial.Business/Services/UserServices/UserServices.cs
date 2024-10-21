@@ -6,17 +6,20 @@ using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
+using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 
 namespace MeowWoofSocial.Business.Services.UserServices
 {
     public class UserServices : IUserServices
     {
         private readonly IUserRepositories _userRepositories;
+        private readonly IUserFollowingRepositories _userFollowingRepositories;
         private readonly IMapper _mapper;
 
-        public UserServices(IUserRepositories userRepositories, IMapper mapper)
+        public UserServices(IUserRepositories userRepositories, IUserFollowingRepositories userFollowingRepositories, IMapper mapper)
         {
             _userRepositories = userRepositories;
+            _userFollowingRepositories = userFollowingRepositories;
             _mapper = mapper;
         }
         
@@ -57,6 +60,54 @@ namespace MeowWoofSocial.Business.Services.UserServices
             return new MessageResultModel()
             {
                 Message = "Ok"
+            };
+        }
+
+        public async Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId)
+        {
+            var user = await _userRepositories.GetSingle(x => x.Id.Equals(userId));
+            if(user == null)
+            {
+                throw new CustomException("User not found");
+            }
+            var UserResModel = new UserProfilePageResModel()
+            {
+                Id = userId,
+                Name = TextConvert.ConvertFromUnicodeEscape(user.Name),
+                Avartar = user.Avartar,
+                Email = user.Email,
+            };
+            var followers = await _userFollowingRepositories.GetList(x => x.FollowerId.Equals(userId), includeProperties: "User");
+            var followings = await _userFollowingRepositories.GetList(x => x.UserId.Equals(userId), includeProperties: "Follower");
+            List<UserFollowResModel> ListFollower = new();
+            List<UserFollowResModel> ListFollowing = new();
+            foreach(var follower in followers)
+            {
+                var FollowerModel = new UserFollowResModel()
+                {
+                    Id = follower.User.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(follower.User.Name),
+                    Avatar = follower.User.Avartar,
+                };
+                ListFollower.Add(FollowerModel);
+            }
+
+            foreach (var following in followings)
+            {
+                var FollowingModel = new UserFollowResModel()
+                {
+                    Id = following.Follower.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(following.Follower.Name),
+                    Avatar = following.Follower.Avartar,
+                };
+                ListFollowing.Add(FollowingModel);
+            }
+            UserResModel.Follower = ListFollower;
+            UserResModel.Following = ListFollowing;
+
+            return new DataResultModel<UserProfilePageResModel>
+            {
+                Data = UserResModel,
             };
         }
     }

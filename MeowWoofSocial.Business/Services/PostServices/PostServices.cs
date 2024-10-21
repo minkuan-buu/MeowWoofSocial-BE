@@ -203,7 +203,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
                 {
                     Id = x.Id,
-                    Hashtag = TextConvert.ConvertFromUnicodeEscape(x.Hashtag)
+                    Hashtag = x.Hashtag != null ? TextConvert.ConvertFromUnicodeEscape(x.Hashtag) : null
                 }).ToList(),
                 Feeling = post.PostReactions
                     .Where(x => x.Type == PostReactionType.Feeling.ToString())
@@ -360,10 +360,6 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     throw new CustomException("Post is not belong to user.");
                 }
-                if (post.Status.Equals(GeneralStatusEnums.Inactive))
-                {
-                    throw new CustomException("Your post has been deleted before.");
-                }
 
                 await _notificationRepo.DeleteRange(post.Notifications);
                 await _cloudStorage.DeleteFilesInPathAsync($"post/{post.Id}");
@@ -382,6 +378,62 @@ namespace MeowWoofSocial.Business.Services.PostServices
             catch (Exception ex)
             {
                 throw new CustomException($"Error removing post: {ex.Message}");
+            }
+        }
+
+        public async Task<MessageResultModel> StorePost(Guid postId, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(p => p.Id.Equals(postId), includeProperties: "PostStoreds");
+                if (post == null)
+                {
+                    throw new CustomException("Post not found.");
+                }
+                if(post.PostStoreds.Where(x => x.UserId.Equals(userId)).FirstOrDefault() != null)
+                {
+                    throw new CustomException("You already store this post");
+                }
+                PostStored NewStored = new()
+                {
+                    Id = Guid.NewGuid(),
+                    PostId = postId,
+                    UserId = userId,
+                    CreateAt = DateTime.Now,
+                    Status = GeneralStatusEnums.Active.ToString(),
+                };
+                await _postStoredRepo.Insert(NewStored);
+                return new MessageResultModel
+                {
+                    Message = "Ok"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error removing post: {ex.Message}");
+            }
+        }
+
+        public async Task<ListDataResultModel<PostDetailResModel>> GetUserPost(Guid UserId, NewsFeedReq newsFeedReq)
+        {
+            try
+            {
+                var UserPostEntities = await _postRepo.GetList(x => x.UserId.Equals(UserId), includeProperties: "PostAttachments,PostHashtags,User,PostReactions.User");
+                var UserPost = UserPostEntities
+                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                    .OrderByDescending(p => p.CreateAt)
+                    .Take(newsFeedReq.PageSize)
+                    .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
+                    .ToList();
+                return new ListDataResultModel<PostDetailResModel>
+                {
+                    Data = UserPost,
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error: {ex.Message}");
             }
         }
     }

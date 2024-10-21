@@ -83,5 +83,14 @@ namespace MeowWoofSocial.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("users/{UserId}")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> GetUserPost(Guid UserId, [FromQuery] NewsFeedReq newsFeedReq)
+        {
+            //var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var result = await _postServices.GetUserPost(UserId, newsFeedReq);
+            return Ok(result);
+        }
     }
 }
