@@ -13,6 +13,6 @@ namespace MeowWoofSocial.Business.Services.UserServices
     {
         Task<DataResultModel<UserLoginResModel>> LoginUser(UserLoginReqModel User);
         Task<MessageResultModel> RegisterUser(UserRegisterReqModel newUser);
-        Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId);
+        Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId, string token);
     }
 }

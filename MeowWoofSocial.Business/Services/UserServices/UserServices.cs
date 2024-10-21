@@ -63,8 +63,9 @@ namespace MeowWoofSocial.Business.Services.UserServices
             };
         }
 
-        public async Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId)
+        public async Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId, string token)
         {
+            Guid userViewId = new Guid(Authentication.DecodeToken(token, "userid"));
             var user = await _userRepositories.GetSingle(x => x.Id.Equals(userId));
             if(user == null)
             {
@@ -75,6 +76,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
                 Id = userId,
                 Name = TextConvert.ConvertFromUnicodeEscape(user.Name),
                 Avartar = user.Avartar,
+                CreatedAt = user.CreateAt,
                 Email = user.Email,
             };
             var followers = await _userFollowingRepositories.GetList(x => x.FollowerId.Equals(userId), includeProperties: "User");
@@ -102,6 +104,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
                 };
                 ListFollowing.Add(FollowingModel);
             }
+            UserResModel.IsFollow = followers.Any(x => x.UserId.Equals(userViewId));
             UserResModel.Follower = ListFollower;
             UserResModel.Following = ListFollowing;
 

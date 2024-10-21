@@ -24,7 +24,8 @@ namespace MeowWoofSocial.API.Controllers
         {
             try
             {
-                var result = await _userServices.GetUserById(UserId);
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _userServices.GetUserById(UserId, token);
                 return Ok(result);
             }
             catch (CustomException ex)

@@ -41,6 +41,8 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public string Name { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string? Avartar { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsFollow { get; set; }
         public List<UserFollowResModel> Following { get; set; } = new();
         public List<UserFollowResModel> Follower { get; set; } = new();
     }
