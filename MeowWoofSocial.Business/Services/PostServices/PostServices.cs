@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -415,27 +416,57 @@ namespace MeowWoofSocial.Business.Services.PostServices
             }
         }
 
-        public async Task<ListDataResultModel<PostDetailResModel>> GetUserPost(Guid UserId, NewsFeedReq newsFeedReq)
+        public async Task<ListDataResultModel<PostDetailResModel>> GetUserPost(Guid userId, NewsFeedReq newsFeedReq)
         {
             try
             {
-                var UserPostEntities = await _postRepo.GetList(x => x.UserId.Equals(UserId), includeProperties: "PostAttachments,PostHashtags,User,PostReactions.User");
-                var UserPost = UserPostEntities
-                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
-                    .OrderByDescending(p => p.CreateAt)
-                    .Take(newsFeedReq.PageSize)
-                    .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
+                List<PostDetailResModel> userPosts = new();
+                DateTime? lastPostCreateAt = null;
+
+                // Kiểm tra nếu có lastPostId thì lấy thời gian tạo của bài viết cuối cùng
+                if (newsFeedReq.lastPostId.HasValue)
+                {
+                    var lastPost = await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value);
+                    lastPostCreateAt = lastPost?.CreateAt;
+                }
+
+                // Bước 1: Lấy tất cả các bài viết của người dùng, sắp xếp theo thời gian giảm dần
+                var allUserPosts = await _postRepo.GetList(
+                    x => x.UserId.Equals(userId), // Chỉ lấy bài viết của user
+                    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
+                );
+
+                // Sắp xếp tất cả bài viết theo thời gian giảm dần (mới nhất trước)
+                allUserPosts = allUserPosts.OrderByDescending(p => p.CreateAt).ToList();
+
+                // Bước 2: Áp dụng lazy load (lọc bài viết cũ hơn bài cuối cùng đã load)
+                if (lastPostCreateAt.HasValue)
+                {
+                    allUserPosts = allUserPosts
+                        .Where(p => p.CreateAt < lastPostCreateAt.Value) // Lọc bài viết cũ hơn
+                        .ToList();
+                }
+
+                // Giới hạn số lượng bài viết theo PageSize
+                userPosts = allUserPosts
+                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString())) // Lọc bài viết Active
+                    .Take(newsFeedReq.PageSize) // Giới hạn số lượng bài viết
+                    .Select(MapPostDetail) // Ánh xạ sang PostDetailResModel
                     .ToList();
+
+                // Trả về kết quả
                 return new ListDataResultModel<PostDetailResModel>
                 {
-                    Data = UserPost,
+                    Data = userPosts
                 };
             }
             catch (Exception ex)
             {
-                throw new CustomException($"Error: {ex.Message}");
+                // Ném ra CustomException với chi tiết lỗi
+                throw new CustomException($"An error occurred while fetching posts: {ex.Message}");
             }
         }
+
     }
 }
 
