@@ -31,6 +31,7 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     {
         public int PageSize { get; set; }
         public Guid? lastPostId { get; set; } = null;
+        public int? loadedPosts { get; set; } = null;
     }
 
     public class PostUpdateReqModel

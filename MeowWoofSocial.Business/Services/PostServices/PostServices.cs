@@ -133,49 +133,89 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     lastPostCreateAt = (await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value))?.CreateAt;
                 }
 
-                // Truy vấn người theo dõi và bài viết của họ
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
                     includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
                 );
-
-                // Tối ưu hóa việc lấy bài viết
-                var followedPostsPaging = followingEntities
-                    .SelectMany(f => f.Follower.Posts)
-                    .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
-                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString())) 
-                    .OrderByDescending(p => p.CreateAt)
-                    .Take(newsFeedReq.PageSize)
-                    .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
-                    .ToList();
-
-                // Đếm số lượng bài viết còn thiếu
-                int remainingPostsCount = newsFeedReq.PageSize - followedPostsPaging.Count;
+                // Truy vấn người theo dõi và bài viết của họ
 
                 // Lấy bài viết không theo dõi
                 var nonFollowedPosts = new List<PostDetailResModel>();
-                if (remainingPostsCount > 0)
+                if (newsFeedReq.loadedPosts.HasValue && newsFeedReq.loadedPosts.Value == 0)
                 {
+                    // Tối ưu hóa việc lấy bài viết
+                    var followedPostsPaging = followingEntities
+                        .SelectMany(f => f.Follower.Posts)
+                        .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
+                        .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                        .OrderByDescending(p => p.CreateAt)
+                        .Take(newsFeedReq.PageSize)
+                        .Select(MapPostDetailFollow)  // Ánh xạ trực tiếp bằng LINQ
+                        .ToList();
+
+                    // Đếm số lượng bài viết còn thiếu
+                    int remainingPostsCount = newsFeedReq.PageSize - followedPostsPaging.Count;
+
+                    if (remainingPostsCount > 0)
+                    {
+                        //var nonFollowedPostsEntities = await _postRepo.GetList(
+                        //    x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId)
+                        //         && (!lastPostCreateAt.HasValue || x.CreateAt < lastPostCreateAt.Value),
+                        //    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
+                        //);
+                        double numPageDouble = 0;
+                        if (newsFeedReq.loadedPosts.HasValue || newsFeedReq.loadedPosts.Value > 0)
+                        {
+                            numPageDouble = (double)newsFeedReq.loadedPosts.Value / 10;
+                        }
+                        int pageIndex = (int)Math.Ceiling(numPageDouble);
+                        var nonFollowedPostsEntities = await _postRepo.GetList(
+                            x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId), orderBy: o => o.OrderByDescending(x => x.CreateAt),
+                            includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags", pageIndex: pageIndex, pageSize: 10
+                        );
+
+                        nonFollowedPosts = nonFollowedPostsEntities
+                            .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                            .OrderByDescending(p => p.CreateAt)
+                            .Skip(newsFeedReq.loadedPosts.HasValue ? newsFeedReq.loadedPosts.Value : 0)
+                            .Take(remainingPostsCount)
+                            .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
+                            .ToList();
+
+                    }
+                    var combinedPosts = followedPostsPaging.Concat(nonFollowedPosts).ToList();
+
+                    return new ListDataResultModel<PostDetailResModel>
+                    {
+                        Data = combinedPosts
+                    };
+                } else
+                {
+                    // Kiểm tra xem đã tải bao nhiêu bài viết rồi
+                    int loadedPosts = newsFeedReq.loadedPosts.HasValue ? newsFeedReq.loadedPosts.Value : 0;
+
+                    // Lấy thêm bài viết, sử dụng tính năng skip để bỏ qua bài đã load
                     var nonFollowedPostsEntities = await _postRepo.GetList(
-                        x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId)
-                             && (!lastPostCreateAt.HasValue || x.CreateAt < lastPostCreateAt.Value),
+                        x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId),
+                        orderBy: o => o.OrderByDescending(x => x.CreateAt),
                         includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
                     );
 
+                    // Sử dụng skip để bỏ qua số lượng bài đã tải
                     nonFollowedPosts = nonFollowedPostsEntities
                         .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
                         .OrderByDescending(p => p.CreateAt)
-                        .Take(remainingPostsCount)
+                        .Skip(loadedPosts)  // Bỏ qua số lượng bài đã tải
+                        .Take(newsFeedReq.PageSize)  // Lấy số lượng bài mong muốn (ví dụ: 3 bài một lượt)
                         .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
                         .ToList();
+
+                    // Trả về kết quả danh sách bài viết
+                    return new ListDataResultModel<PostDetailResModel>
+                    {
+                        Data = nonFollowedPosts
+                    };
                 }
-
-                var combinedPosts = followedPostsPaging.Concat(nonFollowedPosts).ToList();
-
-                return new ListDataResultModel<PostDetailResModel>
-                {
-                    Data = combinedPosts
-                };
             }
             catch (Exception ex)
             {
@@ -193,7 +233,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     Id = post.User.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
-                    Avatar = post.User.Avartar
+                    Avatar = post.User.Avartar,
                 },
                 Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
                 Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
@@ -240,6 +280,62 @@ namespace MeowWoofSocial.Business.Services.PostServices
             };
         }
 
+        private PostDetailResModel MapPostDetailFollow(Post post)
+        {
+            return new PostDetailResModel
+            {
+                Id = post.Id,
+                Author = new PostAuthorResModel
+                {
+                    Id = post.User.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
+                    Avatar = post.User.Avartar,
+                    isFollow = true
+                },
+                Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
+                Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList(),
+                Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
+                {
+                    Id = x.Id,
+                    Hashtag = x.Hashtag != null ? TextConvert.ConvertFromUnicodeEscape(x.Hashtag) : null
+                }).ToList(),
+                Feeling = post.PostReactions
+                    .Where(x => x.Type == PostReactionType.Feeling.ToString())
+                    .Select(x => new FeelingPostResModel
+                    {
+                        Id = x.Id,
+                        TypeReact = x.TypeReact,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                        }
+                    }).ToList(),
+                Comment = post.PostReactions
+                    .Where(x => x.Type == PostReactionType.Comment.ToString())
+                    .OrderByDescending(x => x.CreateAt)
+                    .Select(x => new CommentPostResModel
+                    {
+                        Id = x.Id,
+                        Content = TextConvert.ConvertFromUnicodeEscape(x.Content),
+                        Attachment = x.Attachment,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                        },
+                        CreateAt = x.CreateAt,
+                        UpdatedAt = x.UpdateAt
+                    }).ToList(),
+                Status = post.Status,
+                CreateAt = post.CreateAt,
+                UpdatedAt = post.UpdateAt
+            };
+        }
 
         public async Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token)
         {
