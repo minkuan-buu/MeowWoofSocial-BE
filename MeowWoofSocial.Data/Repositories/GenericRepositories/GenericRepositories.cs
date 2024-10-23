@@ -108,5 +108,20 @@ namespace MeowWoofSocial.Data.Repositories.GenericRepositories
 
             await context.SaveChangesAsync();
         }
+
+        public async Task DeleteRange(IEnumerable<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                if (context.Entry(entity).State == EntityState.Detached)
+                {
+                    dbSet.Attach(entity);
+                }
+
+                context.Entry(entity).State = EntityState.Deleted;
+            }
+
+            await context.SaveChangesAsync();
+        }
     }
 }

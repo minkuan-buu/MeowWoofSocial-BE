@@ -31,12 +31,13 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     {
         public int PageSize { get; set; }
         public Guid? lastPostId { get; set; } = null;
+        public int? loadedPosts { get; set; } = null;
     }
 
     public class PostUpdateReqModel
     {
         public Guid Id { get; set; }
-        public string Content { get; set; }
+        public string? Content { get; set; }
         public List<IFormFile>? Attachments { get; set; }
         public string[]? HashTag { get; set; }
     }
@@ -70,5 +71,8 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     {
         public Guid CommentId { get; set; }
     }
-
+    public class PostIdReqModel
+    {
+        public Guid PostId { get; set; }
+    }
 }
