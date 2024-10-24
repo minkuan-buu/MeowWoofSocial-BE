@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MeowWoofSocial.Business.ApplicationMiddleware;
+using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
@@ -27,42 +28,61 @@ namespace MeowWoofSocial.Business.Services.UserFollowingServices
             _userRepo = userRepo;
         }
 
-        public async Task<MessageResultModel> FollowUser(UserFollowingReqModel userFollowing, string token)
+        public async Task<DataResultModel<UserProfilePageResModel>> FollowUser(UserFollowingReqModel userFollowing, string token)
         {
-            Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-            var userFollow = await _userRepo.GetSingle(x => x.Id == userId);
-            var userFollowed = await _userFollowingRepo.GetSingle(x => x.UserId == userFollowing.UserId && x.FollowerId == userId);
-            var getUser = await _userRepo.GetSingle(x => x.Id == userFollowing.UserId);
-            MessageResultModel result = new();
             try
             {
-                if (userFollow == null)
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var getUser = await _userRepo.GetSingle(x => x.Id == userFollowing.UserId, includeProperties: "UserFollowingFollowers");
+                MessageResultModel result = new();
+                var getUserFollowing = getUser.UserFollowingFollowers.Where(x => x.UserId.Equals(userId) && x.Status.Equals(GeneralStatusEnums.Active.ToString())).FirstOrDefault();
+                if (getUserFollowing != null)
                 {
-                    result.Message = "User isn't existed!";
-                }
-                else if (userFollowed != null && userFollowed.Status.Equals(GeneralStatusEnums.Active.ToString()))
-                {
-                    result.Message = "You have already followed this user";
+                    throw new CustomException("You have already followed this user");
                 }
                 else if (getUser == null)
                 {
-                    result.Message = "The user you are trying to follow does not exist!";
+                    throw new CustomException("The user you are trying to follow does not exist!");
                 }
                 else
                 {
                     var userEntity = _mapper.Map<UserFollowing>(userFollowing);
-                    userEntity.FollowerId = userId;
-                    userEntity.UserId = userFollowing.UserId;
+                    userEntity.FollowerId = userFollowing.UserId;
+                    userEntity.UserId = userId;
                     userEntity.Status = GeneralStatusEnums.Active.ToString();
                     await _userFollowingRepo.Insert(userEntity);
-                    result.Message = "User followed successfully";
                 }
+                var followers = await _userFollowingRepo.GetList(x => x.FollowerId.Equals(userFollowing.UserId), includeProperties: "User");
+                var followings = await _userFollowingRepo.GetList(x => x.UserId.Equals(userFollowing.UserId), includeProperties: "Follower");
+                return new DataResultModel<UserProfilePageResModel>()
+                {
+                    Data = new UserProfilePageResModel()
+                    {
+                        Id = getUser.Id,
+                        Name = TextConvert.ConvertFromUnicodeEscape(getUser.Name),    
+                        Avartar = getUser.Avartar, // Corrected typo
+                        CreatedAt = getUser.CreateAt,
+                        Email = getUser.Email,
+                        IsFollow = followers.Any(x => x.UserId == userId && x.Status == GeneralStatusEnums.Active.ToString()),
+                        Follower = followers.Select(x => new UserFollowResModel()
+                        {
+                            Id = x.User.Id,
+                            Avatar = x.User.Avartar, // Corrected typo
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name),
+                        }).ToList(),
+                        Following = followings.Select(x => new UserFollowResModel()
+                        {
+                            Id = x.Follower.Id,
+                            Avatar = x.Follower.Avartar, // Corrected typo
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.Follower.Name),
+                        }).ToList()
+                    }
+                };
             }
             catch (Exception ex)
             {
-                result.Message = $"An error occurred: {ex.Message}";
+                throw new CustomException(ex.Message);
             }
-            return result;
         }
     }
 }

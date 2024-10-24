@@ -10,6 +10,6 @@ namespace MeowWoofSocial.Business.Services.UserFollowingServices
 {
     public interface IUserFollowingServices
     {
-        Task<MessageResultModel> FollowUser(UserFollowingReqModel userFollowing, string token);
+        Task<DataResultModel<UserProfilePageResModel>> FollowUser(UserFollowingReqModel userFollowing, string token);
     }
 }
