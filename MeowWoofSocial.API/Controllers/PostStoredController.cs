@@ -1,5 +1,5 @@
 ﻿using MeowWoofSocial.Business.Services.PostServices;
-using MeowWoofSocial.Business.Services.UserFollowingServices;
+using MeowWoofSocial.Business.Services.UserServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
 using Microsoft.AspNetCore.Authorization;
@@ -8,25 +8,25 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MeowWoofSocial.API.Controllers
 {
-    [Route("api/follow")]
+    [Route("api/posts")]
     [ApiController]
-    public class UserFollowingController : ControllerBase
+    public class PostStoredController : ControllerBase
     {
-        private readonly IUserFollowingServices _userFollowingServices;
+        private readonly IPostServices _postServices;
 
-        public UserFollowingController(IUserFollowingServices userFollowingServices)
+        public PostStoredController(IPostServices postServices)
         {
-            _userFollowingServices = userFollowingServices;
+            _postServices = postServices;
         }
 
-        [HttpPost("follow-user")]
+        [HttpPost("store")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> FollowUser([FromBody] UserFollowingReqModel userFollowing)
+        public async Task<IActionResult> CreatePostStore([FromBody] PostIdReqModel postReq)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _userFollowingServices.FollowUser(userFollowing, token);
+                var result = await _postServices.StorePost(postReq.PostId, token);
                 return Ok(result);
             }
             catch (CustomException ex)

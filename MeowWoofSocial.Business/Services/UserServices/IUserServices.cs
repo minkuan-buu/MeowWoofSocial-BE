@@ -1,5 +1,6 @@
 ﻿using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
+using MeowWoofSocial.Data.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,6 @@ namespace MeowWoofSocial.Business.Services.UserServices
     {
         Task<DataResultModel<UserLoginResModel>> LoginUser(UserLoginReqModel User);
         Task<MessageResultModel> RegisterUser(UserRegisterReqModel newUser);
+        Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId, string token);
     }
 }

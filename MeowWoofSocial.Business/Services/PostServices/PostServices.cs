@@ -7,9 +7,12 @@ using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.HashtagRepositories;
+using MeowWoofSocial.Data.Repositories.NotificationRepositories;
 using MeowWoofSocial.Data.Repositories.PostAttachmentRepositories;
 using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
 using MeowWoofSocial.Data.Repositories.PostRepositories;
+using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
+using MeowWoofSocial.Data.Repositories.ReportRepositories;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,14 +36,20 @@ namespace MeowWoofSocial.Business.Services.PostServices
         private readonly IPostAttachmentRepositories _postAttachmentRepo;
         private readonly IPostReactionRepositories _postReactionRepo;
         private readonly IUserFollowingRepositories _userFollowingRepo;
+        private readonly INotificationRepositories _notificationRepo;
+        private readonly IPostStoredRepositories _postStoredRepo;
+        private readonly IReportRepositories _reportRepo;
 
-        public PostServices(IPostRepositories postRepo, IMapper mapper, IHashtagRepositories hashtagRepo, IUserRepositories userRepo, IPostAttachmentRepositories postAttachmentRepositories, IPostReactionRepositories postReactionRepositories, IUserFollowingRepositories userFollowingRepositories, ICloudStorage cloudStorage)
+        public PostServices(IPostRepositories postRepo, IMapper mapper, IHashtagRepositories hashtagRepo, IUserRepositories userRepo, IPostAttachmentRepositories postAttachmentRepositories, IPostReactionRepositories postReactionRepositories, IUserFollowingRepositories userFollowingRepositories, ICloudStorage cloudStorage, INotificationRepositories notificationRepo, IPostStoredRepositories postStoredRepo, IReportRepositories reportRepo)
         {
             _cloudStorage = cloudStorage;
             _postRepo = postRepo;
             _mapper = mapper;
             _hashtagRepo = hashtagRepo;
             _userRepo = userRepo;
+            _postStoredRepo = postStoredRepo;
+            _notificationRepo = notificationRepo;
+            _reportRepo = reportRepo;
             _postAttachmentRepo = postAttachmentRepositories;
             _postReactionRepo = postReactionRepositories;
             _userFollowingRepo = userFollowingRepositories;
@@ -123,49 +133,89 @@ namespace MeowWoofSocial.Business.Services.PostServices
                     lastPostCreateAt = (await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value))?.CreateAt;
                 }
 
-                // Truy vấn người theo dõi và bài viết của họ
                 var followingEntities = await _userFollowingRepo.GetList(
                     x => x.UserId.Equals(userId),
                     includeProperties: "Follower.Posts.PostReactions.User,Follower.Posts.PostAttachments,Follower.Posts.PostHashtags"
                 );
-
-                // Tối ưu hóa việc lấy bài viết
-                var followedPostsPaging = followingEntities
-                    .SelectMany(f => f.Follower.Posts)
-                    .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
-                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString())) 
-                    .OrderByDescending(p => p.CreateAt)
-                    .Take(newsFeedReq.PageSize)
-                    .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
-                    .ToList();
-
-                // Đếm số lượng bài viết còn thiếu
-                int remainingPostsCount = newsFeedReq.PageSize - followedPostsPaging.Count;
+                // Truy vấn người theo dõi và bài viết của họ
 
                 // Lấy bài viết không theo dõi
                 var nonFollowedPosts = new List<PostDetailResModel>();
-                if (remainingPostsCount > 0)
+                if (newsFeedReq.loadedPosts.HasValue && newsFeedReq.loadedPosts.Value == 0)
                 {
+                    // Tối ưu hóa việc lấy bài viết
+                    var followedPostsPaging = followingEntities
+                        .SelectMany(f => f.Follower.Posts)
+                        .Where(p => !lastPostCreateAt.HasValue || p.CreateAt < lastPostCreateAt.Value)
+                        .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                        .OrderByDescending(p => p.CreateAt)
+                        .Take(newsFeedReq.PageSize)
+                        .Select(MapPostDetailFollow)  // Ánh xạ trực tiếp bằng LINQ
+                        .ToList();
+
+                    // Đếm số lượng bài viết còn thiếu
+                    int remainingPostsCount = newsFeedReq.PageSize - followedPostsPaging.Count;
+
+                    if (remainingPostsCount > 0)
+                    {
+                        //var nonFollowedPostsEntities = await _postRepo.GetList(
+                        //    x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId)
+                        //         && (!lastPostCreateAt.HasValue || x.CreateAt < lastPostCreateAt.Value),
+                        //    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
+                        //);
+                        double numPageDouble = 0;
+                        if (newsFeedReq.loadedPosts.HasValue || newsFeedReq.loadedPosts.Value > 0)
+                        {
+                            numPageDouble = (double)newsFeedReq.loadedPosts.Value / 10;
+                        }
+                        int pageIndex = (int)Math.Ceiling(numPageDouble);
+                        var nonFollowedPostsEntities = await _postRepo.GetList(
+                            x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId), orderBy: o => o.OrderByDescending(x => x.CreateAt),
+                            includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags", pageIndex: pageIndex, pageSize: 10
+                        );
+
+                        nonFollowedPosts = nonFollowedPostsEntities
+                            .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                            .OrderByDescending(p => p.CreateAt)
+                            .Skip(newsFeedReq.loadedPosts.HasValue ? newsFeedReq.loadedPosts.Value : 0)
+                            .Take(remainingPostsCount)
+                            .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
+                            .ToList();
+
+                    }
+                    var combinedPosts = followedPostsPaging.Concat(nonFollowedPosts).ToList();
+
+                    return new ListDataResultModel<PostDetailResModel>
+                    {
+                        Data = combinedPosts
+                    };
+                } else
+                {
+                    // Kiểm tra xem đã tải bao nhiêu bài viết rồi
+                    int loadedPosts = newsFeedReq.loadedPosts.HasValue ? newsFeedReq.loadedPosts.Value : 0;
+
+                    // Lấy thêm bài viết, sử dụng tính năng skip để bỏ qua bài đã load
                     var nonFollowedPostsEntities = await _postRepo.GetList(
-                        x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId)
-                             && (!lastPostCreateAt.HasValue || x.CreateAt < lastPostCreateAt.Value),
+                        x => !followingEntities.Select(f => f.FollowerId).Contains(x.UserId),
+                        orderBy: o => o.OrderByDescending(x => x.CreateAt),
                         includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
                     );
 
+                    // Sử dụng skip để bỏ qua số lượng bài đã tải
                     nonFollowedPosts = nonFollowedPostsEntities
                         .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
                         .OrderByDescending(p => p.CreateAt)
-                        .Take(remainingPostsCount)
+                        .Skip(loadedPosts)  // Bỏ qua số lượng bài đã tải
+                        .Take(newsFeedReq.PageSize)  // Lấy số lượng bài mong muốn (ví dụ: 3 bài một lượt)
                         .Select(MapPostDetail)  // Ánh xạ trực tiếp bằng LINQ
                         .ToList();
+
+                    // Trả về kết quả danh sách bài viết
+                    return new ListDataResultModel<PostDetailResModel>
+                    {
+                        Data = nonFollowedPosts
+                    };
                 }
-
-                var combinedPosts = followedPostsPaging.Concat(nonFollowedPosts).ToList();
-
-                return new ListDataResultModel<PostDetailResModel>
-                {
-                    Data = combinedPosts
-                };
             }
             catch (Exception ex)
             {
@@ -179,11 +229,11 @@ namespace MeowWoofSocial.Business.Services.PostServices
             return new PostDetailResModel
             {
                 Id = post.Id,
-                author = new PostAuthorResModel
+                Author = new PostAuthorResModel
                 {
                     Id = post.User.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
-                    Avatar = post.User.Avartar
+                    Avatar = post.User.Avartar,
                 },
                 Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
                 Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
@@ -194,7 +244,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
                 {
                     Id = x.Id,
-                    Hashtag = TextConvert.ConvertFromUnicodeEscape(x.Hashtag)
+                    Hashtag = x.Hashtag != null ? TextConvert.ConvertFromUnicodeEscape(x.Hashtag) : null
                 }).ToList(),
                 Feeling = post.PostReactions
                     .Where(x => x.Type == PostReactionType.Feeling.ToString())
@@ -230,6 +280,62 @@ namespace MeowWoofSocial.Business.Services.PostServices
             };
         }
 
+        private PostDetailResModel MapPostDetailFollow(Post post)
+        {
+            return new PostDetailResModel
+            {
+                Id = post.Id,
+                Author = new PostAuthorResModel
+                {
+                    Id = post.User.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(post.User.Name),
+                    Avatar = post.User.Avartar,
+                    isFollow = true
+                },
+                Content = TextConvert.ConvertFromUnicodeEscape(post.Content),
+                Attachments = post.PostAttachments.Select(x => new PostAttachmentResModel
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList(),
+                Hashtags = post.PostHashtags.Select(x => new PostHashtagResModel
+                {
+                    Id = x.Id,
+                    Hashtag = x.Hashtag != null ? TextConvert.ConvertFromUnicodeEscape(x.Hashtag) : null
+                }).ToList(),
+                Feeling = post.PostReactions
+                    .Where(x => x.Type == PostReactionType.Feeling.ToString())
+                    .Select(x => new FeelingPostResModel
+                    {
+                        Id = x.Id,
+                        TypeReact = x.TypeReact,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                        }
+                    }).ToList(),
+                Comment = post.PostReactions
+                    .Where(x => x.Type == PostReactionType.Comment.ToString())
+                    .OrderByDescending(x => x.CreateAt)
+                    .Select(x => new CommentPostResModel
+                    {
+                        Id = x.Id,
+                        Content = TextConvert.ConvertFromUnicodeEscape(x.Content),
+                        Attachment = x.Attachment,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                        },
+                        CreateAt = x.CreateAt,
+                        UpdatedAt = x.UpdateAt
+                    }).ToList(),
+                Status = post.Status,
+                CreateAt = post.CreateAt,
+                UpdatedAt = post.UpdateAt
+            };
+        }
 
         public async Task<DataResultModel<PostUpdateResModel>> UpdatePost(PostUpdateReqModel postUpdateReq, string token)
         {
@@ -237,7 +343,7 @@ namespace MeowWoofSocial.Business.Services.PostServices
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var post = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id && x.UserId == userId);
+                var post = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id && x.UserId == userId, includeProperties: "PostAttachments,PostHashtags");
 
                 if (post == null)
                 {
@@ -248,13 +354,29 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     throw new CustomException("Cannot update an inactive post");
                 }
-
-                post.Content = TextConvert.ConvertToUnicodeEscape(postUpdateReq.Content);
+                if (postUpdateReq.Content != null)
+                {
+                    post.Content = TextConvert.ConvertToUnicodeEscape(postUpdateReq.Content);
+                } else
+                {
+                    throw new CustomException("Content cannot null");
+                }
                 post.UpdateAt = DateTime.Now;
+                await _postRepo.Update(post);
+                if (post.PostAttachments.Count > 0)
+                {
+                    await _postAttachmentRepo.DeleteRange(post.PostAttachments);
+                }
+                if (post.PostHashtags.Count > 0) { 
+                    await _hashtagRepo.DeleteRange(post.PostHashtags);
+                }
 
+                var filePath = $"post/{post.Id}/attachments";
+                await _cloudStorage.DeleteFilesInPathAsync(filePath);
                 if (postUpdateReq.Attachments != null && postUpdateReq.Attachments.Count > 0)
                 {
-                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachments, $"post/{post.Id}/attachments");
+                    var attachments = await _cloudStorage.UploadFile(postUpdateReq.Attachments, filePath);
+                    List<PostAttachment> ListAttachmentAdd = new();
                     foreach (var attachment in attachments)
                     {
                         var postAttachment = new PostAttachment
@@ -264,8 +386,9 @@ namespace MeowWoofSocial.Business.Services.PostServices
                             Attachment = attachment,
                             Status = GeneralStatusEnums.Active.ToString()
                         };
-                        await _postAttachmentRepo.Insert(postAttachment);
+                        ListAttachmentAdd.Add(postAttachment);
                     }
+                    await _postAttachmentRepo.InsertRange(ListAttachmentAdd);
                 }
 
                 if (postUpdateReq.HashTag != null)
@@ -277,12 +400,10 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Hashtag = ht,
                         Status = GeneralStatusEnums.Active.ToString()
                     }).ToList();
-                    post.PostHashtags = hashtags;
                     await _hashtagRepo.InsertRange(hashtags);
                 }
-                await _postRepo.Update(post);
 
-                var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User");
+                var updatedPost = await _postRepo.GetSingle(x => x.Id == postUpdateReq.Id, includeProperties: "PostAttachments,PostHashtags,User,PostReactions.User");
 
                 result.Data = _mapper.Map<PostUpdateResModel>(updatedPost);
             }
@@ -321,12 +442,12 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 throw new CustomException($"Error fetching post by ID: {ex.Message}");
             }
         }
-        public async Task<DataResultModel<PostRemoveResModel>> RemovePost(PostRemoveReqModel postRemoveReq, string token)
+        public async Task<MessageResultModel> RemovePost(PostRemoveReqModel postRemoveReq, string token)
         {
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var post = await _postRepo.GetSingle(p => p.Id == postRemoveReq.PostId);
+                var post = await _postRepo.GetSingle(p => p.Id == postRemoveReq.PostId, includeProperties: "PostAttachments,PostHashtags,Notifications,PostReactions,PostStoreds,Reports");
 
                 if (post == null)
                 {
@@ -336,46 +457,19 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 {
                     throw new CustomException("Post is not belong to user.");
                 }
-                if (post.Status.Equals(GeneralStatusEnums.Inactive))
-                {
-                    throw new CustomException("Your post has been deleted before.");
-                }
 
-                post.Status = GeneralStatusEnums.Inactive.ToString();
-                post.UpdateAt = DateTime.Now;
-                await _postRepo.Update(post);
-
-                var attachments = await _postAttachmentRepo.GetList(a => a.PostId == post.Id);
-                foreach (var attachment in attachments)
-                {
-                    attachment.Status = GeneralStatusEnums.Inactive.ToString();
-                    await _postAttachmentRepo.Update(attachment);
-                }
-
-                var hashtags = await _hashtagRepo.GetList(h => h.PostId == post.Id);
-                foreach (var hashtag in hashtags)
-                {
-                    hashtag.Status = GeneralStatusEnums.Inactive.ToString();
-                    await _hashtagRepo.Update(hashtag);
-                }
-
-                var comments = await _postReactionRepo.GetList(x => x.PostId.Equals(post.Id) && x.Type.Equals(PostReactionType.Comment.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
-
-                foreach (var comment in comments)
-                {
-                    await _postReactionRepo.Delete(comment);
-                }
-
-                var feelings = await _postReactionRepo.GetList(x => x.PostId.Equals(post.Id) && x.Type.Equals(PostReactionType.Feeling.ToString()) && x.PostId.Equals(postRemoveReq.PostId));
-
-                foreach (var feeling in feelings)
-                {
-                    await _postReactionRepo.Delete(feeling);
-                }
+                await _notificationRepo.DeleteRange(post.Notifications);
+                await _cloudStorage.DeleteFilesInPathAsync($"post/{post.Id}");
+                await _postAttachmentRepo.DeleteRange(post.PostAttachments);
+                await _hashtagRepo.DeleteRange(post.PostHashtags);
+                await _postReactionRepo.DeleteRange(post.PostReactions);
+                await _postStoredRepo.DeleteRange(post.PostStoreds);
+                await _reportRepo.DeleteRange(post.Reports);
+                await _postRepo.Delete(post);
 
                 var result = _mapper.Map<PostRemoveResModel>(post);
-                return new DataResultModel<PostRemoveResModel> { 
-                    Data = result 
+                return new MessageResultModel { 
+                    Message = "Ok" 
                 };
             }
             catch (Exception ex)
@@ -383,6 +477,85 @@ namespace MeowWoofSocial.Business.Services.PostServices
                 throw new CustomException($"Error removing post: {ex.Message}");
             }
         }
+
+        public async Task<MessageResultModel> StorePost(Guid postId, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var post = await _postRepo.GetSingle(p => p.Id.Equals(postId), includeProperties: "PostStoreds");
+                if (post == null)
+                {
+                    throw new CustomException("Post not found.");
+                }
+                if(post.PostStoreds.Where(x => x.UserId.Equals(userId)).FirstOrDefault() != null)
+                {
+                    throw new CustomException("You already store this post");
+                }
+                PostStored NewStored = new()
+                {
+                    Id = Guid.NewGuid(),
+                    PostId = postId,
+                    UserId = userId,
+                    CreateAt = DateTime.Now,
+                    Status = GeneralStatusEnums.Active.ToString(),
+                };
+                await _postStoredRepo.Insert(NewStored);
+                return new MessageResultModel
+                {
+                    Message = "Ok"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error removing post: {ex.Message}");
+            }
+        }
+
+        public async Task<ListDataResultModel<PostDetailResModel>> GetUserPost(Guid userId, NewsFeedReq newsFeedReq)
+        {
+            try
+            {
+                List<PostDetailResModel> userPosts = new();
+                DateTime? lastPostCreateAt = null;
+
+                if (newsFeedReq.lastPostId.HasValue)
+                {
+                    var lastPost = await _postRepo.GetSingle(x => x.Id == newsFeedReq.lastPostId.Value);
+                    lastPostCreateAt = lastPost?.CreateAt;
+                }
+
+                var allUserPosts = await _postRepo.GetList(
+                    x => x.UserId.Equals(userId),
+                    includeProperties: "User,PostReactions.User,PostAttachments,PostHashtags"
+                );
+
+                allUserPosts = allUserPosts.OrderByDescending(p => p.CreateAt).ToList();
+
+                if (lastPostCreateAt.HasValue)
+                {
+                    allUserPosts = allUserPosts
+                        .Where(p => p.CreateAt < lastPostCreateAt.Value)
+                        .ToList();
+                }
+
+                userPosts = allUserPosts
+                    .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                    .Take(newsFeedReq.PageSize)
+                    .Select(MapPostDetail)
+                    .ToList();
+
+                return new ListDataResultModel<PostDetailResModel>
+                {
+                    Data = userPosts
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred while fetching posts: {ex.Message}");
+            }
+        }
+
     }
 }
 

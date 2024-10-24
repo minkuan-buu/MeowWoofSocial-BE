@@ -47,7 +47,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<UserFollowing, UserFollowingResModel>();
 
             CreateMap<Post, PostDetailResModel>()
-                .ForMember(dest => dest.author, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.User))
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments
                     .Select(x => new PostAttachmentResModel
@@ -100,12 +100,51 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<PostUpdateReqModel, Post>();
 
             CreateMap<Post, PostUpdateResModel>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments.Select(x => new PostAttachmentResModel
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList()))
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(src.User.Name),
                     Avatar = src.User.Avartar,
-                }));
+                }))
+                .ForMember(dest => dest.Hashtags, opt => opt.MapFrom(src => src.PostHashtags
+                    .Select(x => new PostHashtagResModel
+                    {
+                        Id = x.Id,
+                        Hashtag = TextConvert.ConvertFromUnicodeEscape(x.Hashtag)
+                    }).ToList()))
+                .ForMember(dest => dest.Feeling, opt => opt.MapFrom(src => src.PostReactions
+                    .Where(x => x.Type == PostReactionType.Feeling.ToString())
+                    .Select(x => new FeelingPostResModel
+                    {
+                        Id = x.Id,
+                        TypeReact = x.TypeReact,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                        }
+                    }).ToList()))
+                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.PostReactions
+                    .Where(x => x.Type == PostReactionType.Comment.ToString())
+                    .Select(x => new CommentPostResModel
+                    {
+                        Id = x.Id,
+                        Content = TextConvert.ConvertFromUnicodeEscape(x.Content),
+                        Attachment = x.Attachment,
+                        CreateAt = x.CreateAt,
+                        UpdatedAt = x.UpdateAt,
+                        Author = new PostAuthorResModel
+                        {
+                            Id = x.User.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                        }
+                    }).ToList()));
 
             CreateMap<CommentUpdateReqModel, PostReaction>()
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)));

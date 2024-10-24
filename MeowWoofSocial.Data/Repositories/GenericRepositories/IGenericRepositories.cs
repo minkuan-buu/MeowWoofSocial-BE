@@ -28,5 +28,7 @@ namespace MeowWoofSocial.Data.Repositories.GenericRepositories
         Task Update(T entity);
 
         Task Delete(T entity);
+
+        Task DeleteRange(IEnumerable<T> entities);
     }
 }
