@@ -7,6 +7,7 @@ using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
+using MeowWoofSocial.Business.Services.CloudServices;
 
 namespace MeowWoofSocial.Business.Services.UserServices
 {
@@ -15,15 +16,17 @@ namespace MeowWoofSocial.Business.Services.UserServices
         private readonly IUserRepositories _userRepositories;
         private readonly IUserFollowingRepositories _userFollowingRepositories;
         private readonly IMapper _mapper;
+        private readonly ICloudStorage _cloudStorage;
 
-        public UserServices(IUserRepositories userRepositories, IUserFollowingRepositories userFollowingRepositories, IMapper mapper)
+        public UserServices(IUserRepositories userRepositories, IUserFollowingRepositories userFollowingRepositories, IMapper mapper, ICloudStorage cloudStorage)
         {
             _userRepositories = userRepositories;
             _userFollowingRepositories = userFollowingRepositories;
             _mapper = mapper;
+            _cloudStorage = cloudStorage;
         }
-        
-        public async Task<DataResultModel<UserLoginResModel>>  LoginUser(UserLoginReqModel User)
+
+        public async Task<DataResultModel<UserLoginResModel>> LoginUser(UserLoginReqModel User)
         {
             var user = await _userRepositories.GetSingle(x => x.Email.Equals(User.Email));
             if (user == null)
@@ -67,7 +70,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
         {
             Guid userViewId = new Guid(Authentication.DecodeToken(token, "userid"));
             var user = await _userRepositories.GetSingle(x => x.Id.Equals(userId));
-            if(user == null)
+            if (user == null)
             {
                 throw new CustomException("User not found");
             }
@@ -83,7 +86,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
             var followings = await _userFollowingRepositories.GetList(x => x.UserId.Equals(userId), includeProperties: "Follower.UserFollowingFollowers");
             List<UserFollowResModel> ListFollower = new();
             List<UserFollowResModel> ListFollowing = new();
-            foreach(var follower in followers)
+            foreach (var follower in followers)
             {
                 var FollowerModel = new UserFollowResModel()
                 {
@@ -114,6 +117,40 @@ namespace MeowWoofSocial.Business.Services.UserServices
             {
                 Data = UserResModel,
             };
+        }
+
+        public async Task<DataResultModel<UpdateUserProfileResModel>> UpdateUserProfile(UpdateUserProfileReqModel profileUpdateReq, string token)
+        {
+            var result = new DataResultModel<UpdateUserProfileResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userProfile = await _userRepositories.GetSingle(x => x.Id == profileUpdateReq.Id && x.Id == userId);
+
+                if (userProfile == null || userProfile.Status.Equals(AccountStatusEnums.Inactive))
+                {
+                    throw new CustomException("You are banned from update profile due to violate of terms!");
+                }
+                userProfile.Name = TextConvert.ConvertToUnicodeEscape(profileUpdateReq.Name ?? string.Empty);
+                userProfile.Phone = profileUpdateReq.Phone;
+                userProfile.UpdateAt = DateTime.Now;
+
+                string filePath = $"user/{userId}/avatar";
+                if (profileUpdateReq.Avartar != null)
+                {
+                    var avartar = await _cloudStorage.UploadSingleFile(profileUpdateReq.Avartar, filePath);
+                    userProfile.Avartar = avartar;
+                }
+                await _userRepositories.Update(userProfile);
+                result.Data = _mapper.Map<UpdateUserProfileResModel>(userProfile);
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+
+            return result;
         }
     }
 }
