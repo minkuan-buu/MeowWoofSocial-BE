@@ -40,7 +40,7 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
         public string Email { get; set; } = null!;
-        public string? Avartar { get; set; }
+        public string? Avatar { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsFollow { get; set; }
         public List<UserFollowResModel> Following { get; set; } = new();

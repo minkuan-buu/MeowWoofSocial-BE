@@ -60,7 +60,7 @@ namespace MeowWoofSocial.Business.Services.UserFollowingServices
                     {
                         Id = getUser.Id,
                         Name = TextConvert.ConvertFromUnicodeEscape(getUser.Name),    
-                        Avartar = getUser.Avartar, // Corrected typo
+                        Avatar = getUser.Avartar, // Corrected typo
                         CreatedAt = getUser.CreateAt,
                         Email = getUser.Email,
                         IsFollow = followers.Any(x => x.UserId == userId && x.Status == GeneralStatusEnums.Active.ToString()),

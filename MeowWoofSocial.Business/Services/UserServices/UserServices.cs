@@ -78,7 +78,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
             {
                 Id = userId,
                 Name = TextConvert.ConvertFromUnicodeEscape(user.Name),
-                Avartar = user.Avartar,
+                Avatar = user.Avartar,
                 CreatedAt = user.CreateAt,
                 Email = user.Email,
             };
