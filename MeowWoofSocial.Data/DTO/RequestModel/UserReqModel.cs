@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -31,5 +32,16 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     public class UserFollowingReqModel()
     {
         public Guid UserId { get; set; }
+    }
+    public class UpdateUserProfileReqModel
+    {
+        public Guid Id { get; set; }
+        
+        public string Name { get; set; } = null!;
+
+        public IFormFile? Avartar { get; set; }
+
+        public string Phone { get; set; } = null!;
+        
     }
 }
