@@ -79,8 +79,8 @@ namespace MeowWoofSocial.Business.Services.UserServices
                 CreatedAt = user.CreateAt,
                 Email = user.Email,
             };
-            var followers = await _userFollowingRepositories.GetList(x => x.FollowerId.Equals(userId), includeProperties: "User");
-            var followings = await _userFollowingRepositories.GetList(x => x.UserId.Equals(userId), includeProperties: "Follower");
+            var followers = await _userFollowingRepositories.GetList(x => x.FollowerId.Equals(userId), includeProperties: "User.UserFollowingFollowers");
+            var followings = await _userFollowingRepositories.GetList(x => x.UserId.Equals(userId), includeProperties: "Follower.UserFollowingFollowers");
             List<UserFollowResModel> ListFollower = new();
             List<UserFollowResModel> ListFollowing = new();
             foreach(var follower in followers)
@@ -90,6 +90,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
                     Id = follower.User.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(follower.User.Name),
                     Avatar = follower.User.Avartar,
+                    IsFollow = follower.User.UserFollowingFollowers.Any(x => x.UserId.Equals(userViewId)),
                 };
                 ListFollower.Add(FollowerModel);
             }
@@ -101,6 +102,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
                     Id = following.Follower.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(following.Follower.Name),
                     Avatar = following.Follower.Avartar,
+                    IsFollow = following.Follower.UserFollowingFollowers.Any(x => x.UserId.Equals(userViewId)),
                 };
                 ListFollowing.Add(FollowingModel);
             }

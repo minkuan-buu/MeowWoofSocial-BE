@@ -52,5 +52,6 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
         public string? Avatar { get; set; }
+        public bool? IsFollow { get; set; } = null;
     }
 }
