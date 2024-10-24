@@ -202,6 +202,13 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<PostReaction, CommentDeleteResModel>();
 
             CreateMap<CommentDeleteReqModel, PostReaction>();
+
+            CreateMap<UpdateUserProfileReqModel, User>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)));
+
+            CreateMap<User, UpdateUserProfileResModel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));               
         }
     }
 }
