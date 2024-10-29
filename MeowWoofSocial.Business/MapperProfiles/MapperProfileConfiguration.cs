@@ -208,7 +208,12 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<User, UpdateUserProfileResModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));               
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
+
+            CreateMap<UpdateUserAvartarReqModel, User>();
+
+            CreateMap<User, UpdateUserAvartarResModel>()
+                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.Avartar));
         }
     }
 }
