@@ -2,9 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
 using Microsoft.IdentityModel.Tokens;
-using PTEducation.Data.DTO.ResponseModel;
 using RNGCryptoServiceProvider = System.Security.Cryptography.RNGCryptoServiceProvider;
 
 namespace MeowWoofSocial.Business.ApplicationMiddleware;
@@ -86,7 +86,7 @@ public class Authentication
             issuer: Issuser,
             audience: Issuser,
             claims: Claims,
-            expires: DateTime.Now.AddHours(5),
+            expires: DateTime.Now.AddMonths(1),
             signingCredentials: Credential
             );
         var Encodetoken = new JwtSecurityTokenHandler().WriteToken(Token);

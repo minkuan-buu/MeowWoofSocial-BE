@@ -53,7 +53,7 @@ namespace MeowWoofSocial.Data.Repositories.GenericRepositories
                 query = query.Skip(validPageIndex * validPageSize).Take(validPageSize);
             }
 
-            return query;
+            return query.AsSplitQuery();
         }
 
         public async Task<IEnumerable<T>> GetList(
@@ -94,6 +94,33 @@ namespace MeowWoofSocial.Data.Repositories.GenericRepositories
         {
             dbSet.Attach(entity);
             context.Entry(entity).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+        }
+
+        public async Task Delete(T entity)
+        {
+            if (context.Entry(entity).State == EntityState.Detached)
+            {
+                dbSet.Attach(entity);
+            }
+
+            context.Entry(entity).State = EntityState.Deleted;
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task DeleteRange(IEnumerable<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                if (context.Entry(entity).State == EntityState.Detached)
+                {
+                    dbSet.Attach(entity);
+                }
+
+                context.Entry(entity).State = EntityState.Deleted;
+            }
+
             await context.SaveChangesAsync();
         }
     }

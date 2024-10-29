@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PTEducation.Data.DTO.ResponseModel
+namespace MeowWoofSocial.Data.DTO.ResponseModel
 {
     public class UserResModel
     {
@@ -18,19 +18,53 @@ namespace PTEducation.Data.DTO.ResponseModel
 
     public class UserLoginResModel
     {
-        public string Id { get; set; } = null!;
+        public Guid Id { get; set; } 
         public string Name { get; set; } = null!;
         public string Email { get; set; } = null!;
-        public string PhoneNumber { get; set; } = null!;
+        public string Phone { get; set; } = null!;
+        public string? Avartar { get; set; }
         public string Role { get; set; } = null!;
         public string Token { get; set; } = null!;
     }
 
     public class UserProfileResModel
     {
-        public string Id { get; set; } = null!;
+        public Guid Id { get; set; } 
         public string Name { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Phone { get; set; } = null!;
+    }
+
+    public class UserProfilePageResModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string? Avatar { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsFollow { get; set; }
+        public List<UserFollowResModel> Following { get; set; } = new();
+        public List<UserFollowResModel> Follower { get; set; } = new();
+    }
+
+    public class UserFollowResModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string? Avatar { get; set; }
+        public bool? IsFollow { get; set; } = null;
+    }
+
+    public class UpdateUserProfileResModel
+    {
+        public Guid Id { get; set; }
+        
+        public string Name { get; set; } = null!;
+
+        public string? Avartar { get; set; }
+
+        public string Phone { get; set; } = null!;
+
+        public DateTime? UpdateAt { get; set; }
     }
 }
