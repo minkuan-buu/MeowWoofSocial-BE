@@ -41,9 +41,16 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
                 {
                     throw new CustomException("You are banned from posting due to violate of terms!");
                 }
-                var NewPetStoreId = Guid.NewGuid();
+                
+                var existingPetStore = await _petStoreRepositories.GetSingle(x => x.UserId == userId);
+                if (existingPetStore != null)
+                {
+                    throw new CustomException("You already have a pet store.");
+                }
+
+                var newPetStoreId = Guid.NewGuid();
                 var petStoreEntity = _mapper.Map<PetStore>(petStore);
-                petStoreEntity.Id = NewPetStoreId;
+                petStoreEntity.Id = newPetStoreId;
                 petStoreEntity.UserId = userId;
                 petStoreEntity.Name = TextConvert.ConvertToUnicodeEscape(petStore.Name);
                 petStoreEntity.Description = TextConvert.ConvertToUnicodeEscape(petStore.Description);
@@ -54,6 +61,40 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
 
                 await _petStoreRepositories.Insert(petStoreEntity);
                 result.Data = _mapper.Map<PetStoreCreateResModel>(petStoreEntity);
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+        
+        public async Task<DataResultModel<PetStoreUpdateResModel>> UpdatePetStore(PetStoreUpdateReqModel petStoreUpdateReq, string token)
+        {
+            var result = new DataResultModel<PetStoreUpdateResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var petStores = await _petStoreRepositories.GetSingle(x => x.Id == petStoreUpdateReq.Id && x.UserId == userId);
+
+                if (petStoreUpdateReq == null)
+                {
+                    throw new CustomException("PetStore not found or you do not have permission to update this Pet Store");
+                }
+                
+                petStores.Name = TextConvert.ConvertToUnicodeEscape(petStoreUpdateReq.Name ?? string.Empty);
+                petStores.Description = TextConvert.ConvertToUnicodeEscape(petStoreUpdateReq.Description ?? string.Empty);
+                petStores.Email = petStoreUpdateReq.Email;
+                petStores.Phone = petStoreUpdateReq.Phone;
+                petStores.Status = GeneralStatusEnums.Active.ToString();
+                petStores.UpdateAt = DateTime.Now;
+
+                await _petStoreRepositories.Update(petStores);
+
+                var updatedPetStore = await _petStoreRepositories.GetSingle(x => x.Id == petStoreUpdateReq.Id, includeProperties: "User");
+
+                result.Data = _mapper.Map<PetStoreUpdateResModel>(updatedPetStore);
+
             }
             catch (Exception ex)
             {

@@ -17,6 +17,7 @@ namespace MeowWoofSocial.API.Controllers
         {
             _petStoreServices = petStoreServices;
         }
+        
         [HttpPost("create-pet-store")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> CreatePetStore([FromBody] PetStoreCreateReqModel petStore)
@@ -25,6 +26,22 @@ namespace MeowWoofSocial.API.Controllers
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _petStoreServices.CreatePetStore(petStore, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        [HttpPut("update-pet-store")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> UpdatePetStore([FromBody] PetStoreUpdateReqModel petStoreUpdateReq)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _petStoreServices.UpdatePetStore(petStoreUpdateReq, token);
                 return Ok(result);
             }
             catch (CustomException ex)
