@@ -13,5 +13,6 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
         Task<DataResultModel<PetStoreCreateResModel>> CreatePetStore(PetStoreCreateReqModel petStore, string token);
         Task<DataResultModel<PetStoreUpdateResModel>> UpdatePetStore(PetStoreUpdateReqModel petStore, string token);
         Task<DataResultModel<PetStoreDeleteResModel>> DeletePetStore(PetStoreDeleteReqModel PetStoreDeleteReq, string token);
+        Task<DataResultModel<PetStoreCreateResModel>> GetPetStoreByID(Guid petStoreId, string token);
     }
 }

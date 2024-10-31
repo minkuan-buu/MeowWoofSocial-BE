@@ -125,5 +125,34 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
                 throw new CustomException($"Error deleting PetStore: {ex.Message}");
             }
         }
+        
+        public async Task<DataResultModel<PetStoreCreateResModel>> GetPetStoreByID(Guid petStoreId, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+
+                var petStoreEntity = await _petStoreRepositories.GetSingle(
+                    x => x.Id == petStoreId,
+                    includeProperties: "User"
+                );
+
+                if (petStoreEntity == null)
+                {
+                    throw new CustomException("Pet Store not found");
+                }
+
+                var petStoreDetail = _mapper.Map<PetStoreCreateResModel>(petStoreEntity);
+
+                return new DataResultModel<PetStoreCreateResModel>
+                {
+                    Data = petStoreDetail
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error fetching Pet Store by ID: {ex.Message}");
+            }
+        }
     }
 }
