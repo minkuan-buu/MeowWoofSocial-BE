@@ -23,6 +23,8 @@ using Microsoft.AspNetCore.Authentication;
 using MeowWoofSocial.Data.Repositories.NotificationRepositories;
 using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
 using MeowWoofSocial.Data.Repositories.ReportRepositories;
+using MeowWoofSocial.Data.Repositories.PetStoreRepositories;
+using MeowWoofSocial.Business.Services.PetStoreServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,11 +118,13 @@ builder.Services.AddScoped<IUserFollowingRepositories, UserFollowingRepositories
 builder.Services.AddScoped<INotificationRepositories, NotificationRepositories>();
 builder.Services.AddScoped<IPostStoredRepositories, PostStoredRepositories>();
 builder.Services.AddScoped<IReportRepositories, ReportRepositories>();
-//=========================================== SERVICE =============================================
+builder.Services.AddScoped<IPetStoreRepositories, PetStoreRepositories>();
+//=========================================== SERVICE =========================s====================
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPostServices, PostServices>();
 builder.Services.AddScoped<IUserFollowingServices, UserFollowingServices>();
 builder.Services.AddScoped<IPostReactionServices, PostReactionServices>();
+builder.Services.AddScoped<IPetStoreServices, PetStoreServices>();
 //=========================================== CORS ================================================
 
 builder.Services.AddCors(options =>
