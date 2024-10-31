@@ -230,7 +230,10 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<PetStore, PetStoreUpdateResModel>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Description)));
-        
+            
+            CreateMap<PetStore, PetStoreDeleteResModel>();
+
+            CreateMap<PetStoreDeleteReqModel, PostReaction>();
         }
     }
 }

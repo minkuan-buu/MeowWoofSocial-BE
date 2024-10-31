@@ -102,5 +102,28 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
             }
             return result;
         }
+        
+        public async Task<DataResultModel<PetStoreDeleteResModel>> DeletePetStore(PetStoreDeleteReqModel PetStoreDeleteReq, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var petStore = await _petStoreRepositories.GetSingle(c => c.Id == PetStoreDeleteReq.PetStoreId);
+
+                if (petStore == null || petStore.UserId != userId)
+                {
+                    throw new CustomException("PetStore not found or does not belong to the user.");
+                }
+
+                await _petStoreRepositories.Delete(petStore);
+
+                var result = _mapper.Map<PetStoreDeleteResModel>(petStore);
+                return new DataResultModel<PetStoreDeleteResModel> { Data = result };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error deleting PetStore: {ex.Message}");
+            }
+        }
     }
 }

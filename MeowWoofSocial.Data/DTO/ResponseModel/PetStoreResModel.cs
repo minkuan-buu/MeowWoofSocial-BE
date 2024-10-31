@@ -45,4 +45,9 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
 
         public DateTime? UpdateAt { get; set; }
     }
+    
+    public class PetStoreDeleteResModel
+    {
+        public Guid Id { get; set; }
+    }
 }

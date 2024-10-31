@@ -36,4 +36,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public string Phone { get; set; } = null!;
         
     }
+    
+    public class PetStoreDeleteReqModel
+    {
+        public Guid PetStoreId { get; set; }
+    }
 }
