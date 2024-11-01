@@ -41,4 +41,29 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     {
         public Guid PetStoreId { get; set; }
     }
+    
+    public class PetStoreProductCreateReqModel
+    {
+        public Guid PetStoreId { get; set; }
+
+        public Guid CategoryId { get; set; }
+
+        public string Name { get; set; } = null!;
+        
+    }
+    
+    public class PetStoreProductUpdateReqModel
+    {
+        public Guid Id { get; set; }
+
+        public Guid CategoryId { get; set; }
+
+        public string Name { get; set; } = null!;
+
+    }
+    
+    public class PetStoreProductDeleteReqModel
+    {
+        public Guid PetStoreProductId { get; set; }
+    }
 }

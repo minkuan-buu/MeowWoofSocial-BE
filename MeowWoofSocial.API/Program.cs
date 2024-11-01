@@ -17,6 +17,7 @@ using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using Google.Cloud.Storage.V1;
 using MeowWoofSocial.Business.Services.CloudServices;
+using MeowWoofSocial.Business.Services.PetStoreProductServices;
 using MeowWoofSocial.Business.Services.UserFollowingServices;
 using MeowWoofSocial.Business.Services.ReactionServices;
 using Microsoft.AspNetCore.Authentication;
@@ -25,6 +26,7 @@ using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
 using MeowWoofSocial.Data.Repositories.ReportRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreRepositories;
 using MeowWoofSocial.Business.Services.PetStoreServices;
+using MeowWoofSocial.Data.Repositories.PetStoreProductRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -119,12 +121,14 @@ builder.Services.AddScoped<INotificationRepositories, NotificationRepositories>(
 builder.Services.AddScoped<IPostStoredRepositories, PostStoredRepositories>();
 builder.Services.AddScoped<IReportRepositories, ReportRepositories>();
 builder.Services.AddScoped<IPetStoreRepositories, PetStoreRepositories>();
+builder.Services.AddScoped<IPetStoreProductRepositories, PetStoreProductRepositories>();
 //=========================================== SERVICE =========================s====================
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPostServices, PostServices>();
 builder.Services.AddScoped<IUserFollowingServices, UserFollowingServices>();
 builder.Services.AddScoped<IPostReactionServices, PostReactionServices>();
 builder.Services.AddScoped<IPetStoreServices, PetStoreServices>();
+builder.Services.AddScoped<IPetStoreProductServices, PetStoreProductServices>();
 //=========================================== CORS ================================================
 
 builder.Services.AddCors(options =>

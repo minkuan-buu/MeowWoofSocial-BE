@@ -25,12 +25,14 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Password, opt => opt.Ignore());
 
             CreateMap<PostCreateReqModel, Post>()
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.PostAttachments, opt => opt.Ignore())
                 .ForMember(dest => dest.PostHashtags, opt => opt.Ignore());
 
             CreateMap<Post, PostCreateResModel>()
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments))
                 .ForMember(dest => dest.Hashtags, opt => opt.MapFrom(src => src.PostHashtags))
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.User));
@@ -48,7 +50,8 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<Post, PostDetailResModel>()
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.User))
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments
                     .Select(x => new PostAttachmentResModel
                     {
@@ -61,7 +64,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                         Id = x.Id,
                         Hashtag = TextConvert.ConvertFromUnicodeEscape(x.Hashtag)
                     }).ToList()))
-                    
+
                 .ForMember(dest => dest.Feeling, opt => opt.MapFrom(src => src.PostReactions
                     .Where(x => x.Type == PostReactionType.Feeling.ToString())
                     .Select(x => new FeelingPostResModel
@@ -94,18 +97,20 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name));
 
             CreateMap<UserFollowingReqModel, UserFollowing>()
-                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
-                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId));
 
             CreateMap<PostUpdateReqModel, Post>();
 
             CreateMap<Post, PostUpdateResModel>()
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
-                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments.Select(x => new PostAttachmentResModel
-                {
-                    Id = x.Id,
-                    Attachment = x.Attachment
-                }).ToList()))
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PostAttachments.Select(x =>
+                    new PostAttachmentResModel
+                    {
+                        Id = x.Id,
+                        Attachment = x.Attachment
+                    }).ToList()))
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
@@ -147,11 +152,13 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     }).ToList()));
 
             CreateMap<CommentUpdateReqModel, PostReaction>()
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)));
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)));
 
             CreateMap<PostReaction, CommentUpdateResModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
                     Id = src.User.Id,
@@ -162,14 +169,16 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<CommentCreateReqModel, PostReaction>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Content)))
                 .ForMember(dest => dest.Attachment, opt => opt.Ignore())
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => PostReactionType.Comment.ToString()))
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => DateTime.Now));
 
             CreateMap<PostReaction, CommentPostResModel>()
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)));
-                
+                .ForMember(dest => dest.Content,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Content)));
+
             CreateMap<PostReaction, CommentCreatePostResModel>()
                 .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PostAuthorResModel
                 {
@@ -208,7 +217,8 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<User, UpdateUserProfileResModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
+                .ForMember(dest => dest.Name,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
 
             CreateMap<UpdateUserAvartarReqModel, User>();
 
@@ -217,23 +227,43 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<PetStoreCreateReqModel, PetStore>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Description)));
+                .ForMember(dest => dest.Description,
+                    opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Description)));
 
             CreateMap<PetStore, PetStoreCreateResModel>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Description)));
-            
+                .ForMember(dest => dest.Description,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Description)));
+
             CreateMap<PetStoreUpdateReqModel, PetStore>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Description)));
+                .ForMember(dest => dest.Description,
+                    opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Description)));
 
             CreateMap<PetStore, PetStoreUpdateResModel>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Description)));
-            
+                .ForMember(dest => dest.Description,
+                    opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Description)));
+
             CreateMap<PetStore, PetStoreDeleteResModel>();
 
-            CreateMap<PetStoreDeleteReqModel, PostReaction>();
+            CreateMap<PetStoreDeleteReqModel, PetStore>();
+
+            CreateMap<PetStoreProductCreateReqModel, PetStoreProduct>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)));
+
+            CreateMap<PetStoreProduct, PetStoreProductCreateResModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
+
+            CreateMap<PetStoreUpdateReqModel, PetStoreProduct>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)));
+
+            CreateMap<PetStoreProduct, PetStoreUpdateResModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
+            
+            CreateMap<PetStoreProduct, PetStoreDeleteResModel>();
+
+            CreateMap<PetStoreDeleteReqModel, PetStoreProduct>();
         }
     }
 }

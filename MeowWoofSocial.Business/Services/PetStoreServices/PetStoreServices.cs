@@ -39,7 +39,7 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
 
                 if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
                 {
-                    throw new CustomException("You are banned from posting due to violate of terms!");
+                    throw new CustomException("You are banned from creating pet store due to violate of terms!");
                 }
                 
                 var existingPetStore = await _petStoreRepositories.GetSingle(x => x.UserId == userId);
