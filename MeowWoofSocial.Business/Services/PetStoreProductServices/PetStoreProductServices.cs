@@ -88,4 +88,29 @@ public class PetStoreProductServices : IPetStoreProductServices
         }
         return result;
     }
+    
+    public async Task<DataResultModel<PetStoreProductDeleteResModel>> DeletePetStoreProduct(PetStoreProductDeleteReqModel PetStoreDeleteReq, string token)
+    {
+        try
+        {
+            Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+            var petStore = await _petStoreProductRepo.GetSingle(c => c.Id == PetStoreDeleteReq.PetStoreProductId);
+
+            if (petStore == null || petStore.Id != PetStoreDeleteReq.PetStoreProductId)
+            {
+                throw new CustomException("PetStoreProduct not found or does not belong to the user.");
+            }
+
+            await _petStoreProductRepo.Delete(petStore);
+
+            var result = _mapper.Map<PetStoreProductDeleteResModel>(petStore);
+            return new DataResultModel<PetStoreProductDeleteResModel> { Data = result };
+        }
+        catch (Exception ex)
+        {
+            throw new CustomException($"Error deleting PetStore: {ex.Message}");
+        }
+    }
+    
+    
 }

@@ -47,4 +47,20 @@ public class PetStoreProductController : Controller
             
         }
     }
+    
+    [HttpDelete("delete-pet-store-product")]
+    [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+    public async Task<IActionResult> DeletePetStore([FromBody] PetStoreProductDeleteReqModel PetStoreProductDeleteReq)
+    {
+        try
+        {
+            var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var result = await _petStoreProductServices.DeletePetStoreProduct(PetStoreProductDeleteReq, token);
+            return Ok(result);
+        }
+        catch (CustomException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
