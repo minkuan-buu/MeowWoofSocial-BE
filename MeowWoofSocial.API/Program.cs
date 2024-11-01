@@ -26,6 +26,8 @@ using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
 using MeowWoofSocial.Data.Repositories.ReportRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreRepositories;
 using MeowWoofSocial.Business.Services.PetStoreServices;
+using MeowWoofSocial.Data.Repositories.PetStoreProductAttachmentRepositories;
+using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -122,6 +124,8 @@ builder.Services.AddScoped<IPostStoredRepositories, PostStoredRepositories>();
 builder.Services.AddScoped<IReportRepositories, ReportRepositories>();
 builder.Services.AddScoped<IPetStoreRepositories, PetStoreRepositories>();
 builder.Services.AddScoped<IPetStoreProductRepositories, PetStoreProductRepositories>();
+builder.Services.AddScoped<IPetStoreProductAttachmentRepositories, PetStoreProductAttachmentRepositories>();
+builder.Services.AddScoped<IPetStoreProductItemRepositories, PetStoreProductItemRepositories>();
 //=========================================== SERVICE =========================s====================
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPostServices, PostServices>();

@@ -1,8 +1,10 @@
 ﻿using MeowWoofSocial.Business.Services.PetStoreProductServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
+using MeowWoofSocial.Data.DTO.ResponseModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace MeowWoofSocial.API.Controllers;
 
@@ -17,10 +19,13 @@ public class PetStoreProductController : Controller
     
     [HttpPost("create-pet-store-product")]
     [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-    public async Task<IActionResult> CreatePetStore([FromBody] PetStoreProductCreateReqModel petStoreProduct)
+    public async Task<IActionResult> CreatePetStoreProduct([FromForm] PetStoreProductCreateReqModel petStoreProduct, [FromForm] string petstoreproductItem)
     {
+        
         try
         {
+            var petstoreproductItems = JsonConvert.DeserializeObject<List<PetStoreProductItemsReqModel>>(petstoreproductItem);
+            petStoreProduct.PetStoreProductItems = petstoreproductItems;
             var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
             var result = await _petStoreProductServices.CreatePetStoreProduct(petStoreProduct, token);
             return Ok(result);

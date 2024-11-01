@@ -39,12 +39,16 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<PostAttachment, PostAttachmentResModel>()
                 .ForMember(dest => dest.Attachment, opt => opt.MapFrom(src => src.Attachment));
-
+            
+            CreateMap<PetStoreProductAttachment, PetStoreProductAttachmentResModel>();
+            
             CreateMap<PostHashtag, PostHashtagResModel>()
                 .ForMember(dest => dest.Hashtag, opt => opt.MapFrom(src => src.Hashtag));
 
             CreateMap<User, PostAuthorResModel>()
                 .ForMember(dest => dest.Avatar, opt => opt.Ignore());
+            
+            CreateMap<User, PetStoreAuthorResModel>();
 
             CreateMap<UserFollowing, UserFollowingResModel>();
 
@@ -250,10 +254,45 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<PetStoreDeleteReqModel, PetStore>();
 
             CreateMap<PetStoreProductCreateReqModel, PetStoreProduct>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.PetStoreProductAttachments, opt => opt.Ignore())
+                .ForMember(dest => dest.PetStoreProductItems, opt => opt.Ignore());
 
             CreateMap<PetStoreProduct, PetStoreProductCreateResModel>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.PetStoreProductAttachments
+                    .Select(x => new PetStoreProductAttachmentResModel
+                    {
+                        Id = x.Id,
+                        Attachment = x.Attachment
+                    }).ToList()))
+                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => new PetStoreAuthorResModel
+                {
+                    Id = src.PetStore.UserId,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.PetStore.Name),
+                    Description = TextConvert.ConvertFromUnicodeEscape(src.PetStore.Description)
+                }))
+                .ForMember(dest => dest.PetStoreProductItems, opt => opt.MapFrom(src => src.PetStoreProductItems
+                    .Select(x => new PetStoreProductItems()
+                    {
+                        Id = x.Id,
+                        Name = TextConvert.ConvertFromUnicodeEscape(x.Name),
+                        Quantity = x.Quantity,
+                        Price = x.Price
+                    }).ToList()))
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => new ProductCategory
+                {
+                    Id = src.Category.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(src.Category.Name),
+                    ParentCategory = src.Category.ParentCategory != null ? new ParentCategoryModel
+                    {
+                        Id = src.Category.ParentCategory.Id,
+                        Name = TextConvert.ConvertFromUnicodeEscape(src.Category.ParentCategory.Name)
+                    } : null
+                }));
+
+
+            
 
             CreateMap<PetStoreUpdateReqModel, PetStoreProduct>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)));
@@ -262,8 +301,14 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)));
             
             CreateMap<PetStoreProduct, PetStoreDeleteResModel>();
+            
+            CreateMap<PetStoreProduct, PetStoreProductItems>();
 
             CreateMap<PetStoreDeleteReqModel, PetStoreProduct>();
+            
+            CreateMap<PetStoreProductItemsReqModel, PetStoreProductItem>();
+
+            CreateMap<Category, ProductCategory>();
         }
     }
 }

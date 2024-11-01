@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MeowWoofSocial.Data.DTO.ResponseModel;
+using Microsoft.AspNetCore.Http;
 
 namespace MeowWoofSocial.Data.DTO.RequestModel
 {
@@ -21,6 +23,7 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public string Email { get; set; } = null!;
 
         public string Phone { get; set; } = null!;
+        
     }
     
     public class PetStoreUpdateReqModel
@@ -50,6 +53,18 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
         public string Name { get; set; } = null!;
         
+        public List<IFormFile>? Attachment { get; set; }
+
+        public List<PetStoreProductItemsReqModel> PetStoreProductItems { get; set; } = new();
+    }
+    
+    public class PetStoreProductItemsReqModel
+    {
+        public string Name { get; set; } = null!;
+
+        public int Quantity { get; set; }
+
+        public decimal Price { get; set; }
     }
     
     public class PetStoreProductUpdateReqModel
