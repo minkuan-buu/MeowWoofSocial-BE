@@ -109,35 +109,89 @@ public class PetStoreProductServices : IPetStoreProductServices
             return result;
         }
     
-    public async Task<DataResultModel<PetStoreProductUpdateResModel>> UpdatePetStoreProduct(PetStoreProductUpdateReqModel petStoreProduct, string token)
+    public async Task<DataResultModel<PetStoreProductUpdateResModel>> UpdatePetStoreProduct(PetStoreProductUpdateReqModel petStoreProductUpdateReq, string token)
     {
-        var result = new DataResultModel<PetStoreProductUpdateResModel>();
-        try
-        {
-            Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-            var user = await _userRepo.GetSingle(x => x.Id == userId);
-            var getPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProduct.Id);
-            if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+         var result = new DataResultModel<PetStoreProductUpdateResModel>();
+            try
             {
-                throw new CustomException("You are banned from updating pet store product due to violate of terms!");
-            }
-            if (getPetStoreProduct == null)
-            {
-                throw new CustomException("The pet store product you are trying to update does not exist!");
-            }
-            getPetStoreProduct.Id = petStoreProduct.Id;
-            getPetStoreProduct.Name = TextConvert.ConvertToUnicodeEscape(petStoreProduct.Name);
-            getPetStoreProduct.CategoryId = petStoreProduct.CategoryId;
-            getPetStoreProduct.UpdateAt = DateTime.Now;
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var petStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductUpdateReq.Id, includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems");
 
-            await _petStoreProductRepo.Update(getPetStoreProduct);
-            result.Data = _mapper.Map<PetStoreProductUpdateResModel>(getPetStoreProduct);
-        }
-        catch (Exception ex)
-        {
-            throw new CustomException($"An error occurred: {ex.Message}");
-        }
-        return result;
+                if (petStoreProduct == null)
+                {
+                    throw new CustomException("Pet store product not found or you do not have permission to update this pet store product");
+                }
+
+                if (petStoreProduct.Status == GeneralStatusEnums.Inactive.ToString())
+                {
+                    throw new CustomException("Cannot update an inactive pet store product");
+                }
+                if (petStoreProductUpdateReq.Name != null)
+                {
+                    petStoreProduct.Name = TextConvert.ConvertToUnicodeEscape(petStoreProductUpdateReq.Name);
+                } else
+                {
+                    throw new CustomException("Name cannot null");
+                }
+                petStoreProduct.UpdateAt = DateTime.Now;
+                await _petStoreProductRepo.Update(petStoreProduct);
+                if (petStoreProduct.PetStoreProductAttachments.Count > 0)
+                {
+                    await _petStoreProductAttachmentRepo.DeleteRange(petStoreProduct.PetStoreProductAttachments);
+                }
+                if (petStoreProduct.PetStoreProductItems.Count > 0)
+                {
+                    await _petStoreProductItemRepo.DeleteRange(petStoreProduct.PetStoreProductItems);
+                }
+                
+                var filePath = $"petstoreproduct/{petStoreProduct.Id}/attachments";
+                await _cloudStorage.DeleteFilesInPathAsync(filePath);
+                if (petStoreProductUpdateReq.Attachment != null && petStoreProductUpdateReq.Attachment.Count > 0)
+                {
+                    var attachments = await _cloudStorage.UploadFile(petStoreProductUpdateReq.Attachment, filePath);
+                    List<PetStoreProductAttachment> ListAttachmentAdd = new();
+                    foreach (var attachment in attachments)
+                    {
+                        var petStoreProductAttachment = new PetStoreProductAttachment
+                        {
+                            Id = Guid.NewGuid(),
+                            PetStoreProductId = petStoreProduct.Id,
+                            Attachment = attachment,
+                            CreateAt = DateTime.Now
+                        };
+                        ListAttachmentAdd.Add(petStoreProductAttachment);
+                    }
+                    await _petStoreProductAttachmentRepo.InsertRange(ListAttachmentAdd);
+                }
+                if(petStoreProductUpdateReq.PetStoreProductItems != null && petStoreProductUpdateReq.PetStoreProductItems.Count > 0)
+                {
+                    List<PetStoreProductItem> listInsertProductItems = new();
+                    foreach (var productItem in petStoreProductUpdateReq.PetStoreProductItems)
+                    {
+                        var productItemId = Guid.NewGuid();
+                        PetStoreProductItem newProductItem = new()
+                        {
+                            Id = productItemId,
+                            ProductId = petStoreProduct.Id,
+                            Name = productItem.Name,
+                            Quantity = productItem.Quantity,
+                            Price = productItem.Price,
+                            Status = GeneralStatusEnums.Active.ToString()
+                        };
+                        listInsertProductItems.Add(newProductItem);
+                    }
+                    await _petStoreProductItemRepo.InsertRange(listInsertProductItems);
+                }
+                var newPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductUpdateReq.Id, includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems");
+                var pettStoreProductResModel = _mapper.Map<PetStoreProductUpdateResModel>(newPetStoreProduct);
+                result.Data = pettStoreProductResModel;
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
     }
     
     public async Task<DataResultModel<PetStoreProductDeleteResModel>> DeletePetStoreProduct(PetStoreProductDeleteReqModel PetStoreDeleteReq, string token)

@@ -40,10 +40,12 @@ public class PetStoreProductController : ControllerBase
     
     [HttpPut("product")]
     [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-    public async Task<IActionResult> UpdatePetStore([FromBody] PetStoreProductUpdateReqModel petStoreProductUpdateReq)
+    public async Task<IActionResult> UpdatePetStore([FromForm] PetStoreProductUpdateReqModel petStoreProductUpdateReq, [FromForm] string petstoreproductItem)
     {
         try
         {
+            var petstoreproductItems = JsonConvert.DeserializeObject<List<PetStoreProductItemsReqModel>>(petstoreproductItem);
+            petStoreProductUpdateReq.PetStoreProductItems = petstoreproductItems;
             var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
             var result = await _petStoreProductServices.UpdatePetStoreProduct(petStoreProductUpdateReq, token);
             return Ok(result);
