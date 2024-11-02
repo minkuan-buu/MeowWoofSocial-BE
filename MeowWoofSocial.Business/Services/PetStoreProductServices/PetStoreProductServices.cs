@@ -96,7 +96,7 @@ public class PetStoreProductServices : IPetStoreProductServices
                     await _petStoreProductItemRepo.InsertRange(listInsertProductItems);
                 }
                 
-                var newPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductEntity.Id, includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory");
+                var newPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductEntity.Id, includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems");
                 
                 var pettStoreProductResModel = _mapper.Map<PetStoreProductCreateResModel>(newPetStoreProduct);
                 result.Data = pettStoreProductResModel;
