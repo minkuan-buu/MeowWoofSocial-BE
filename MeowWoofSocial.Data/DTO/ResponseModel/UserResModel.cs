@@ -58,12 +58,21 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     public class UpdateUserProfileResModel
     {
         public Guid Id { get; set; }
+
+        public string Email { get; set; } = null!;
         
         public string Name { get; set; } = null!;
 
-        public string? Avartar { get; set; }
-
         public string Phone { get; set; } = null!;
+
+        public DateTime? UpdateAt { get; set; }
+    }
+
+    public class UpdateUserAvartarResModel
+    {
+        public Guid Id { get; set; }
+
+        public string? Avatar { get; set; }
 
         public DateTime? UpdateAt { get; set; }
     }

@@ -131,8 +131,35 @@ namespace MeowWoofSocial.Business.Services.UserServices
                 {
                     throw new CustomException("You are banned from update profile due to violate of terms!");
                 }
+                userProfile.Email = profileUpdateReq.Email;
                 userProfile.Name = TextConvert.ConvertToUnicodeEscape(profileUpdateReq.Name ?? string.Empty);
                 userProfile.Phone = profileUpdateReq.Phone;
+                userProfile.UpdateAt = DateTime.Now;
+                
+                await _userRepositories.Update(userProfile);
+                result.Data = _mapper.Map<UpdateUserProfileResModel>(userProfile);
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<DataResultModel<UpdateUserAvartarResModel>> UpdateUserAvartar(UpdateUserAvartarReqModel profileUpdateReq, string token)
+        {
+            var result = new DataResultModel<UpdateUserAvartarResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userProfile = await _userRepositories.GetSingle(x => x.Id == profileUpdateReq.Id && x.Id == userId);
+
+                if (userProfile == null || userProfile.Status.Equals(AccountStatusEnums.Inactive))
+                {
+                    throw new CustomException("You are banned from update profile due to violate of terms!");
+                }                
                 userProfile.UpdateAt = DateTime.Now;
 
                 string filePath = $"user/{userId}/avatar";
@@ -142,7 +169,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
                     userProfile.Avartar = avartar;
                 }
                 await _userRepositories.Update(userProfile);
-                result.Data = _mapper.Map<UpdateUserProfileResModel>(userProfile);
+                result.Data = _mapper.Map<UpdateUserAvartarResModel>(userProfile);
 
             }
             catch (Exception ex)

@@ -53,14 +53,30 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
 
-        [HttpPut("update-profile")]
+        [HttpPut("update-user-profile")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> UpdatePost([FromForm] UpdateUserProfileReqModel profileUpdateReq)
+        public async Task<IActionResult> UpdateUserProfile([FromForm] UpdateUserProfileReqModel profileUpdateReq)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _userServices.UpdateUserProfile(profileUpdateReq, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("update-user-avartar")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> UpdateUserAvartar([FromForm] UpdateUserAvartarReqModel profileUpdateReq)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _userServices.UpdateUserAvartar(profileUpdateReq, token);
                 return Ok(result);
             }
             catch (CustomException ex)
