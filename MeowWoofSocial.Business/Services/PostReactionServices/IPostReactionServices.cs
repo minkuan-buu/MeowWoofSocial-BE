@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeowWoofSocial.Business.Services.ReactionServices
+namespace MeowWoofSocial.Business.Services.PostReactionServices
 {
     public interface IPostReactionServices
     {

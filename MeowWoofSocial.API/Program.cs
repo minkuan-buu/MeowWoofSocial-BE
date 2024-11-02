@@ -18,24 +18,24 @@ using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using Google.Cloud.Storage.V1;
 using MeowWoofSocial.Business.Services.CloudServices;
 using MeowWoofSocial.Business.Services.UserFollowingServices;
-using MeowWoofSocial.Business.Services.ReactionServices;
 using Microsoft.AspNetCore.Authentication;
 using MeowWoofSocial.Data.Repositories.NotificationRepositories;
 using MeowWoofSocial.Data.Repositories.PostStoredRepositories;
 using MeowWoofSocial.Data.Repositories.ReportRepositories;
+using MeowWoofSocial.Business.Services.TransactionServices;
+using MeowWoofSocial.Business.Services.PostReactionServices;
+using MeowWoofSocial.Data.Repositories.OrderRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-//========================================== SWAGGER ==============================================
+builder.Services.AddSignalR();
 
+//========================================== SWAGGER ==============================================
 builder.Services.AddSwaggerGen(c =>
 {
-
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
@@ -46,66 +46,52 @@ builder.Services.AddSwaggerGen(c =>
     {
         In = ParameterLocation.Header,
         Description = "JWT Authorization header using the Bearer scheme. " +
-                            "\n\nEnter your token in the text input below. " +
-                              "\n\nExample: '12345abcde'",
+                      "\n\nEnter your token in the text input below. " +
+                      "\n\nExample: '12345abcde'",
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
         Scheme = "bearer"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-{
-    new OpenApiSecurityScheme{
-        Reference = new OpenApiReference{
-            Type = ReferenceType.SecurityScheme,
-            Id = "Bearer"
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
         }
-    },
-    new string[]{}
-}
     });
 });
-
 
 builder.Services.AddDbContext<MeowWoofSocialContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //======================================= AUTHENTICATION ==========================================
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddJwtBearer(options =>
-//    {
-//        options.TokenValidationParameters = new TokenValidationParameters
-//        {
-//            ValidIssuer = "TestingJWTIssuerSigningPTEducationMS@123",
-//            ValidAudience = "TestingJWTIssuerSigningPTEducationMS@123",
-//            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("TestingIssuerSigningKeyPTEducationMS@123")),
-//            ValidateIssuer = true,
-//            ValidateAudience = true,
-//            ValidateIssuerSigningKey = true,
-//            ValidateLifetime = true,
-//        };
-//    });
 builder.Services.AddAuthentication("MeowWoofAuthentication")
     .AddScheme<AuthenticationSchemeOptions, AuthorizeMiddleware>("MeowWoofAuthentication", null);
 
 //========================================== MAPPER ===============================================
-
 builder.Services.AddAutoMapper(typeof(MapperProfileConfiguration).Assembly);
 
 //========================================== MIDDLEWARE ===========================================
-
 builder.Services.AddSingleton<GlobalExceptionMiddleware>();
 builder.Services.AddControllers()
-        .AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        });
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 //=========================================== FIREBASE ============================================
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"meowwoofsocial.json");
 builder.Services.AddSingleton<ICloudStorage>(s => new CloudStorage(StorageClient.Create()));
+
 //========================================== REPOSITORY ===========================================
 builder.Services.AddScoped<IUserRepositories, UserRepositories>();
 builder.Services.AddScoped<IPostRepositories, PostRepositories>();
@@ -116,23 +102,27 @@ builder.Services.AddScoped<IUserFollowingRepositories, UserFollowingRepositories
 builder.Services.AddScoped<INotificationRepositories, NotificationRepositories>();
 builder.Services.AddScoped<IPostStoredRepositories, PostStoredRepositories>();
 builder.Services.AddScoped<IReportRepositories, ReportRepositories>();
+builder.Services.AddScoped<IOrderRepositories, OrderRepositories>();
+
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPostServices, PostServices>();
 builder.Services.AddScoped<IUserFollowingServices, UserFollowingServices>();
 builder.Services.AddScoped<IPostReactionServices, PostReactionServices>();
-//=========================================== CORS ================================================
+builder.Services.AddScoped<ITransactionServices, TransactionServices>();
 
+//=========================================== CORS ================================================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "AllowAll", policy =>
+    options.AddPolicy(name: "AllowSpecificOrigin", policy =>
     {
         policy
-        //.WithOrigins("http://tradiem.pteducation.edu.vn")
-        .AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod();
-        //.AllowCredentials();
+              //.WithOrigins("https://meowwoofsocial.com")
+              //.WithOrigins("http://localhost:5173/") // Chỉ định nguồn cụ thể
+              .AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+              //.AllowCredentials(); // Cho phép cookies, authorization headers, hoặc TLS client certificates
     });
 });
 
@@ -145,16 +135,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
+app.UseCors("AllowSpecificOrigin");
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
-
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseAuthentication();
-
 app.MapControllers();
+
+// Đảm bảo URL hub đúng
+app.MapHub<TransactionHub>("/hub/transactionhub");
 
 app.Run();
