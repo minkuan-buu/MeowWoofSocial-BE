@@ -130,6 +130,11 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     public class PetStoreProductDeleteResModel
     {
         public Guid Id { get; set; }
+        
+        public string Status { get; set; }
+        
+        public DateTime UpdateAt { get; set; }
+        
     }
 
     public class GetAllPetStoreProductResModel
