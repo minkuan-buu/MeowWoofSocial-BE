@@ -18,7 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MeowWoofSocial.Business.Services.ReactionServices
+namespace MeowWoofSocial.Business.Services.PostReactionServices
 {
     public class PostReactionServices : IPostReactionServices
     {
@@ -85,7 +85,7 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 postReaction.CreateAt = DateTime.Now;
                 postReaction.UserId = userId;
                 string filePath = $"post/{commentReq.PostId}/comments/{postReaction.Id}/attachments";
-                if(commentReq.Attachment != null)
+                if (commentReq.Attachment != null)
                 {
                     var attachments = await _cloudStorage.UploadSingleFile(commentReq.Attachment, filePath);
                     postReaction.Attachment = attachments;
@@ -141,7 +141,7 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                 postReaction.Type = PostReactionType.Feeling.ToString();
                 postReaction.CreateAt = DateTime.Now;
                 postReaction.UserId = userId;
-               
+
                 await _postReactionRepo.Insert(postReaction);
                 result.Data = _mapper.Map<FeelingCreatePostResModel>(postReaction);
                 result.Data.Author = new PostAuthorResModel()
@@ -189,7 +189,7 @@ namespace MeowWoofSocial.Business.Services.ReactionServices
                     await _postReactionRepo.Delete(OldFeeling);
                 }
 
-                if(feelingReq.TypeReact != null)
+                if (feelingReq.TypeReact != null)
                 {
                     var NewFeeling = _mapper.Map<PostReaction>(feelingReq);
                     NewFeeling.UserId = userId;
