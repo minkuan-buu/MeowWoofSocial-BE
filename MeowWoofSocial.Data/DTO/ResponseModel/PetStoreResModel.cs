@@ -115,8 +115,14 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid CategoryId { get; set; }
 
         public string Name { get; set; } = null!;
-
-        public string Status { get; set; } = null!;
+        
+        public PetStoreAuthorResModel Author { get; set; } = null!;
+        
+        public List<PetStoreProductAttachmentResModel> Attachments { get; set; } = new();
+        
+        public List<PetStoreProductItems> PetStoreProductItems { get; set; } = new();
+        
+        public ProductCategory Category { get; set; } = new();
 
         public DateTime? UpdateAt { get; set; }
     }

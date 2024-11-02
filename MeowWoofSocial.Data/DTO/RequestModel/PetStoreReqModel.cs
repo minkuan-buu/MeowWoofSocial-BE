@@ -74,6 +74,10 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public Guid CategoryId { get; set; }
 
         public string Name { get; set; } = null!;
+        
+        public List<IFormFile>? Attachment { get; set; }
+
+        public List<PetStoreProductItemsReqModel> PetStoreProductItems { get; set; } = new();
 
     }
     
