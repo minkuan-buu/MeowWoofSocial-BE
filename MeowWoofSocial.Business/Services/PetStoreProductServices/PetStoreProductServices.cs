@@ -10,6 +10,7 @@ using MeowWoofSocial.Data.Repositories.PetStoreProductAttachmentRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreRepositories;
+using MeowWoofSocial.Data.Repositories.ProductRatingRepositories;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
 
 
@@ -23,8 +24,10 @@ public class PetStoreProductServices : IPetStoreProductServices
     private readonly IPetStoreProductAttachmentRepositories _petStoreProductAttachmentRepo;
     private readonly ICloudStorage _cloudStorage;
     private readonly IPetStoreProductItemRepositories _petStoreProductItemRepo;
+    private readonly IPetStoreRepositories _petStoreRepo;
+    private readonly IProductRatingRepositories _productRatingRepo;
     
-    public PetStoreProductServices(IMapper mapper, IPetStoreProductRepositories petStoreProductRepositories, IUserRepositories userRepositories, IPetStoreProductAttachmentRepositories petStoreProductAttachmentRepo, ICloudStorage cloudStorage, IPetStoreProductItemRepositories petStoreProductItemRepo)
+    public PetStoreProductServices(IMapper mapper, IPetStoreProductRepositories petStoreProductRepositories, IUserRepositories userRepositories, IPetStoreProductAttachmentRepositories petStoreProductAttachmentRepo, ICloudStorage cloudStorage, IPetStoreProductItemRepositories petStoreProductItemRepo, IPetStoreRepositories petStoreRepo, IProductRatingRepositories productRatingRepo)
     {
         _mapper = mapper;
         _petStoreProductRepo = petStoreProductRepositories;
@@ -32,6 +35,8 @@ public class PetStoreProductServices : IPetStoreProductServices
         _petStoreProductAttachmentRepo = petStoreProductAttachmentRepo;
         _cloudStorage = cloudStorage;
         _petStoreProductItemRepo = petStoreProductItemRepo;
+        _petStoreRepo = petStoreRepo;
+        _productRatingRepo = productRatingRepo;
     }
     
     public async Task<DataResultModel<PetStoreProductCreateResModel>> CreatePetStoreProduct(PetStoreProductCreateReqModel petStoreProduct,
@@ -194,26 +199,36 @@ public class PetStoreProductServices : IPetStoreProductServices
             return result;
     }
     
-    public async Task<DataResultModel<PetStoreProductDeleteResModel>> DeletePetStoreProduct(PetStoreProductDeleteReqModel PetStoreDeleteReq, string token)
+    public async Task<MessageResultModel> DeletePetStoreProduct(PetStoreProductDeleteReqModel PetStoreDeleteReq, string token)
     {
         try
         {
             Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-            var petStore = await _petStoreProductRepo.GetSingle(c => c.Id == PetStoreDeleteReq.PetStoreProductId);
-
-            if (petStore == null || petStore.Id != PetStoreDeleteReq.PetStoreProductId)
+            var petStoreProduct = await _petStoreProductRepo.GetSingle(p => p.Id == PetStoreDeleteReq.PetStoreProductId, includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems");
+            var getPetStore = await _petStoreRepo.GetSingle(x => x.Id == petStoreProduct.PetStoreId);
+            if (petStoreProduct == null)
             {
-                throw new CustomException("PetStoreProduct not found or does not belong to the user.");
+                throw new CustomException("Post not found.");
             }
+            if (getPetStore.UserId != userId)
+            {
+                throw new CustomException("Pet store product item is not belong to user.");
+            }
+            
+            await _cloudStorage.DeleteFilesInPathAsync($"petstoreproduct/{petStoreProduct.Id}");
+            await _petStoreProductAttachmentRepo.DeleteRange(petStoreProduct.PetStoreProductAttachments);
+            await _productRatingRepo.DeleteRange(petStoreProduct.ProductRatings);
+            await _petStoreProductItemRepo.DeleteRange(petStoreProduct.PetStoreProductItems);
+            await _petStoreProductRepo.Delete(petStoreProduct);
 
-            await _petStoreProductRepo.Delete(petStore);
-
-            var result = _mapper.Map<PetStoreProductDeleteResModel>(petStore);
-            return new DataResultModel<PetStoreProductDeleteResModel> { Data = result };
+            var result = _mapper.Map<PetStoreProductDeleteResModel>(petStoreProduct);
+            return new MessageResultModel { 
+                Message = "Ok" 
+            };
         }
         catch (Exception ex)
         {
-            throw new CustomException($"Error deleting PetStore: {ex.Message}");
+            throw new CustomException($"Error removing post: {ex.Message}");
         }
     }
     

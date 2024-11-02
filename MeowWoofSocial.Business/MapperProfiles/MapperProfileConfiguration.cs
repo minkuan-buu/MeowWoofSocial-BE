@@ -333,7 +333,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     } : null
                 }));
             
-            CreateMap<PetStoreProduct, PetStoreDeleteResModel>();
+            CreateMap<PetStoreProduct, PetStoreProductDeleteResModel>();
             
             CreateMap<PetStoreProduct, PetStoreProductItems>();
 
