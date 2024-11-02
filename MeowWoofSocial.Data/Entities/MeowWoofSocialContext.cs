@@ -68,6 +68,9 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("Category");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Attachment)
+                .HasMaxLength(500)
+                .IsUnicode(false);
             entity.Property(e => e.Description)
                 .HasMaxLength(511)
                 .IsUnicode(false);
@@ -112,6 +115,9 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Price).HasColumnType("decimal(15, 3)");
+            entity.Property(e => e.RefId)
+                .HasMaxLength(10)
+                .IsUnicode(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false);
