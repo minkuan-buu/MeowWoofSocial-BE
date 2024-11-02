@@ -125,4 +125,17 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
     }
+
+    public class GetAllPetStoreProductResModel
+    {
+        public Guid Id { get; set; }
+        
+        public string Name { get; set; } = null!;
+        
+        public List<PetStoreProductAttachment> Attachments { get; set; } = new();
+        
+        public decimal Price { get; set; }
+        
+        public int TotalSales { get; set; }
+    }
 }

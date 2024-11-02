@@ -163,5 +163,45 @@ public class PetStoreProductServices : IPetStoreProductServices
         }
     }
     
+    public async Task<DataResultModel<GetAllPetStoreProductResModel>> GetAllPetStoreProduct(string token)
+    {
+        var result = new DataResultModel<GetAllPetStoreProductResModel>();
+        try
+        {
+            Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+            var user = await _userRepo.GetSingle(x => x.Id == userId);
+            if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+            {
+                throw new CustomException("You are banned from viewing pet store product due to violate of terms!");
+            }
+            var petStoreProduct = await _petStoreProductRepo.GetList(includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory");
+            var petStoreProductResModel = _mapper.Map<List<GetAllPetStoreProductResModel>>(petStoreProduct);
+            result.Data = petStoreProduct;
+        }
+        catch (Exception ex)
+        {
+            throw new CustomException($"Error: {ex.Message}");
+        }
+        return result;
+    }
     
+    private GetAllPetStoreProductResModel MapPetStoreProduct(PetStoreProduct petStoreProduct)
+        {
+            var getPetStoreProduct = _petStoreProductRepo.GetSingle(x => x.Id == petStoreProduct.Id, includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails");
+            return new GetAllPetStoreProductResModel
+            {
+                Id = petStoreProduct.Id,
+                Name = TextConvert.ConvertFromUnicodeEscape(petStoreProduct.Name),
+                Attachments = petStoreProduct.PetStoreProductAttachments.Select(x => new PetStoreProductAttachment()
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList(),
+                Price = petStoreProduct.PetStoreProductItems.Select(x => x.Price).FirstOrDefault(),
+                TotalSales = petStoreProduct.PetStoreProductItems
+                    .SelectMany(x => x.OrderDetails)
+                    .Where(od => od.Status == "Success")
+                    .Sum(od => od.Quantity)
+            };
+        }
 }
