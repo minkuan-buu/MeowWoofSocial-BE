@@ -7,7 +7,7 @@ public interface IPetStoreProductServices
 {
     Task<DataResultModel<PetStoreProductCreateResModel>> CreatePetStoreProduct(PetStoreProductCreateReqModel petStoreProduct,
         string token);
-    Task<DataResultModel<PetStoreProductUpdateResModel>> UpdatePetStoreProduct(PetStoreProductUpdateReqModel petStoreProduct, string token);
+    Task<DataResultModel<PetStoreProductUpdateResModel>> UpdatePetStoreProduct(PetStoreProductUpdateReqModel petStoreProductUpdateReq, string token);
     Task<DataResultModel<PetStoreProductDeleteResModel>> DeletePetStoreProduct(PetStoreProductDeleteReqModel PetStoreDeleteReq, string token);
     Task<ListDataResultModel<GetAllPetStoreProductResModel>> GetAllPetStoreProduct(PetStoreProductReq petStoreProductReq);
     Task<DataResultModel<PetStoreProductCreateResModel>> GetPetStoreProductById(Guid Id);
