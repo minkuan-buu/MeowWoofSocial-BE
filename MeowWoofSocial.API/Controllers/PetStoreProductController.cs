@@ -8,7 +8,9 @@ using Newtonsoft.Json;
 
 namespace MeowWoofSocial.API.Controllers;
 
-public class PetStoreProductController : Controller
+[Route("api/stores")]
+[ApiController]
+public class PetStoreProductController : ControllerBase
 {
     private readonly IPetStoreProductServices _petStoreProductServices;
 
@@ -17,7 +19,7 @@ public class PetStoreProductController : Controller
         _petStoreProductServices = petStoreProductServices;
     }
     
-    [HttpPost("create-pet-store-product")]
+    [HttpPost("product")]
     [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
     public async Task<IActionResult> CreatePetStoreProduct([FromForm] PetStoreProductCreateReqModel petStoreProduct, [FromForm] string petstoreproductItem)
     {
@@ -36,7 +38,7 @@ public class PetStoreProductController : Controller
         }
     }
     
-    [HttpPut("update-pet-store-product")]
+    [HttpPut("product")]
     [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
     public async Task<IActionResult> UpdatePetStore([FromBody] PetStoreProductUpdateReqModel petStoreProductUpdateReq)
     {
@@ -53,7 +55,7 @@ public class PetStoreProductController : Controller
         }
     }
     
-    [HttpDelete("delete-pet-store-product")]
+    [HttpDelete("product")]
     [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
     public async Task<IActionResult> DeletePetStore([FromBody] PetStoreProductDeleteReqModel PetStoreProductDeleteReq)
     {
@@ -69,7 +71,7 @@ public class PetStoreProductController : Controller
         }
     }
     
-    [HttpGet("get-all-pet-store")]
+    [HttpGet("products")]
     [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
     public async Task<IActionResult> GetUserPost([FromQuery] PetStoreProductReq petStoreProductReq)
     {
