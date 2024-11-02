@@ -17,6 +17,8 @@ public partial class Order
 
     public DateTime? UpdateAt { get; set; }
 
+    public string RefId { get; set; } = null!;
+
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

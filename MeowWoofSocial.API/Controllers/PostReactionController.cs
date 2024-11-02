@@ -1,5 +1,5 @@
-﻿using MeowWoofSocial.Business.Services.PostServices;
-using MeowWoofSocial.Business.Services.ReactionServices;
+﻿using MeowWoofSocial.Business.Services.PostReactionServices;
+using MeowWoofSocial.Business.Services.PostServices;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.RequestModel;
 using Microsoft.AspNetCore.Authorization;
