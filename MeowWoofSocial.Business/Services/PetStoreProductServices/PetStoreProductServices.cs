@@ -224,4 +224,23 @@ public class PetStoreProductServices : IPetStoreProductServices
                     .Sum(od => od.Quantity)
             };
         }
+
+    public async Task<DataResultModel<PetStoreProductCreateResModel>> GetPetStoreProductById(Guid petStoreProductId)
+    {
+        var result = new DataResultModel<PetStoreProductCreateResModel>();
+        try
+        {
+            var newPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductId,
+                includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems");
+
+            var pettStoreProductResModel = _mapper.Map<PetStoreProductCreateResModel>(newPetStoreProduct);
+            result.Data = pettStoreProductResModel;
+        }
+        catch (Exception ex)
+        {
+            throw new CustomException($"Error: {ex.Message}");
+        }
+
+        return result;
+    }
 }
