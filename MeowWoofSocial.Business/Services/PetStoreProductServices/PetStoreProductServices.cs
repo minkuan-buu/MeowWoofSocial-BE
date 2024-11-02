@@ -163,5 +163,65 @@ public class PetStoreProductServices : IPetStoreProductServices
         }
     }
     
+    public async Task<ListDataResultModel<GetAllPetStoreProductResModel>> GetAllPetStoreProduct(PetStoreProductReq petStoreProductReq)
+    {
+        try
+        {
+            List<GetAllPetStoreProductResModel> petStoreProductRes = new();
+            DateTime? lastPetStoreProductCreateAt = null;
+
+            if (petStoreProductReq.lastPetStoreProductId.HasValue)
+            {
+                var lastPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductReq.lastPetStoreProductId.Value);
+                lastPetStoreProductCreateAt = lastPetStoreProduct?.CreateAt;
+            }
+
+            var allPetStoreProducts = await _petStoreProductRepo.GetList(
+                x => x.Status.Equals(GeneralStatusEnums.Active.ToString()),
+                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails"
+            );
+
+            allPetStoreProducts = allPetStoreProducts.OrderByDescending(p => p.CreateAt).ToList();
+
+            if (lastPetStoreProductCreateAt.HasValue)
+            {
+                allPetStoreProducts = allPetStoreProducts
+                    .Where(p => p.CreateAt < lastPetStoreProductCreateAt.Value)
+                    .ToList();
+            }
+
+            allPetStoreProducts = allPetStoreProducts
+                .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                .Take(petStoreProductReq.PageSize)
+                .ToList();
+
+            return new ListDataResultModel<GetAllPetStoreProductResModel>
+            {
+                Data = allPetStoreProducts.Select(MapPetStoreProduct).ToList(),
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new CustomException($"An error occurred while fetching posts: {ex.Message}");
+        }
+    }
     
+    private GetAllPetStoreProductResModel MapPetStoreProduct(PetStoreProduct petStoreProduct)
+        {
+            return new GetAllPetStoreProductResModel
+            {
+                Id = petStoreProduct.Id,
+                Name = TextConvert.ConvertFromUnicodeEscape(petStoreProduct.Name),
+                Attachments = petStoreProduct.PetStoreProductAttachments.Select(x => new PetStoreProductAttachmentResModel()
+                {
+                    Id = x.Id,
+                    Attachment = x.Attachment
+                }).ToList(),
+                Price = petStoreProduct.PetStoreProductItems.Select(x => x.Price).FirstOrDefault(),
+                TotalSales = petStoreProduct.PetStoreProductItems
+                    .SelectMany(x => x.OrderDetails)
+                    .Where(od => od.Status.Equals(TransactionEnums.Success.ToString()))
+                    .Sum(od => od.Quantity)
+            };
+        }
 }
