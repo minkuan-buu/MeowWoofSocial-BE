@@ -132,7 +132,7 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         
         public string Name { get; set; } = null!;
         
-        public List<PetStoreProductAttachment> Attachments { get; set; } = new();
+        public List<PetStoreProductAttachmentResModel> Attachments { get; set; } = new();
         
         public decimal Price { get; set; }
         

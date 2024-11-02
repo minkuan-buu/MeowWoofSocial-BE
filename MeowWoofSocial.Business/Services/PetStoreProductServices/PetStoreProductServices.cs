@@ -163,36 +163,56 @@ public class PetStoreProductServices : IPetStoreProductServices
         }
     }
     
-    public async Task<DataResultModel<GetAllPetStoreProductResModel>> GetAllPetStoreProduct(string token)
+    public async Task<ListDataResultModel<GetAllPetStoreProductResModel>> GetAllPetStoreProduct(PetStoreProductReq petStoreProductReq)
     {
-        var result = new DataResultModel<GetAllPetStoreProductResModel>();
         try
         {
-            Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-            var user = await _userRepo.GetSingle(x => x.Id == userId);
-            if (user == null || user.Status.Equals(AccountStatusEnums.Inactive))
+            List<GetAllPetStoreProductResModel> petStoreProductRes = new();
+            DateTime? lastPetStoreProductCreateAt = null;
+
+            if (petStoreProductReq.lastPetStoreProductId.HasValue)
             {
-                throw new CustomException("You are banned from viewing pet store product due to violate of terms!");
+                var lastPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductReq.lastPetStoreProductId.Value);
+                lastPetStoreProductCreateAt = lastPetStoreProduct?.CreateAt;
             }
-            var petStoreProduct = await _petStoreProductRepo.GetList(includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory");
-            var petStoreProductResModel = _mapper.Map<List<GetAllPetStoreProductResModel>>(petStoreProduct);
-            result.Data = petStoreProduct;
+
+            var allPetStoreProducts = await _petStoreProductRepo.GetList(
+                x => x.Status.Equals(GeneralStatusEnums.Active.ToString()),
+                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails"
+            );
+
+            allPetStoreProducts = allPetStoreProducts.OrderByDescending(p => p.CreateAt).ToList();
+
+            if (lastPetStoreProductCreateAt.HasValue)
+            {
+                allPetStoreProducts = allPetStoreProducts
+                    .Where(p => p.CreateAt < lastPetStoreProductCreateAt.Value)
+                    .ToList();
+            }
+
+            allPetStoreProducts = allPetStoreProducts
+                .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
+                .Take(petStoreProductReq.PageSize)
+                .ToList();
+
+            return new ListDataResultModel<GetAllPetStoreProductResModel>
+            {
+                Data = allPetStoreProducts.Select(MapPetStoreProduct).ToList(),
+            };
         }
         catch (Exception ex)
         {
-            throw new CustomException($"Error: {ex.Message}");
+            throw new CustomException($"An error occurred while fetching posts: {ex.Message}");
         }
-        return result;
     }
     
     private GetAllPetStoreProductResModel MapPetStoreProduct(PetStoreProduct petStoreProduct)
         {
-            var getPetStoreProduct = _petStoreProductRepo.GetSingle(x => x.Id == petStoreProduct.Id, includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails");
             return new GetAllPetStoreProductResModel
             {
                 Id = petStoreProduct.Id,
                 Name = TextConvert.ConvertFromUnicodeEscape(petStoreProduct.Name),
-                Attachments = petStoreProduct.PetStoreProductAttachments.Select(x => new PetStoreProductAttachment()
+                Attachments = petStoreProduct.PetStoreProductAttachments.Select(x => new PetStoreProductAttachmentResModel()
                 {
                     Id = x.Id,
                     Attachment = x.Attachment
@@ -200,7 +220,7 @@ public class PetStoreProductServices : IPetStoreProductServices
                 Price = petStoreProduct.PetStoreProductItems.Select(x => x.Price).FirstOrDefault(),
                 TotalSales = petStoreProduct.PetStoreProductItems
                     .SelectMany(x => x.OrderDetails)
-                    .Where(od => od.Status == "Success")
+                    .Where(od => od.Status.Equals(TransactionEnums.Success.ToString()))
                     .Sum(od => od.Quantity)
             };
         }

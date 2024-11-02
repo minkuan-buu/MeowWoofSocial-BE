@@ -68,4 +68,12 @@ public class PetStoreProductController : Controller
             return BadRequest(new { message = ex.Message });
         }
     }
+    
+    [HttpGet("get-all-pet-store")]
+    [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+    public async Task<IActionResult> GetUserPost([FromQuery] PetStoreProductReq petStoreProductReq)
+    {
+        var result = await _petStoreProductServices.GetAllPetStoreProduct(petStoreProductReq);
+        return Ok(result);
+    }
 }
