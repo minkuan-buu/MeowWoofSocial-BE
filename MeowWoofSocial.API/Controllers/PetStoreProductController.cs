@@ -78,4 +78,19 @@ public class PetStoreProductController : ControllerBase
         var result = await _petStoreProductServices.GetAllPetStoreProduct(petStoreProductReq);
         return Ok(result);
     }
+    
+    [HttpGet("product/{Id}")]
+    [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+    public async Task<IActionResult> GetPetStoreProductById(Guid Id)
+    {
+        try
+        {
+            var result = await _petStoreProductServices.GetPetStoreProductById(Id);
+            return Ok(result);
+        }
+        catch (CustomException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
