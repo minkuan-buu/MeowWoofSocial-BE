@@ -123,6 +123,10 @@ public partial class MeowWoofSocialContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
+            entity.HasOne(d => d.UserAddress).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.UserAddressId)
+                .HasConstraintName("Order_UserAddress_Id_fk");
+
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

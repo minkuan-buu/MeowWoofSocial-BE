@@ -19,9 +19,13 @@ public partial class Order
 
     public string RefId { get; set; } = null!;
 
+    public Guid? UserAddressId { get; set; }
+
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
     public virtual User User { get; set; } = null!;
+
+    public virtual UserAddress? UserAddress { get; set; }
 }
