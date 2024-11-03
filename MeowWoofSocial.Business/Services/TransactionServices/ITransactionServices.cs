@@ -11,5 +11,6 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
     public interface ITransactionServices
     {
         public Task<MessageResultModel> HandleTransactions(TransactionResponseDto transactions);
+        public Task<DataResultModel<OrderCreateResModel>> CreateOrder(List<OrderDetailCreateReqModel> request, string token);
     }
 }

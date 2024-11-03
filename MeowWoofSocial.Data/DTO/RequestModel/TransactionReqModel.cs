@@ -70,4 +70,11 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         [JsonProperty("corresponsiveBankName")]
         public string CorresponsiveBankName { get; set; }
     }
+    
+    public class OrderDetailCreateReqModel
+    {
+        public Guid ProductItemId { get; set; }
+        public decimal UnitPrice { get; set; }
+        public int Quantity { get; set; }
+    }
 }

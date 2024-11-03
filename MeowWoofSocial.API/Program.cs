@@ -32,6 +32,7 @@ using MeowWoofSocial.Business.Services.TransactionServices;
 using MeowWoofSocial.Business.Services.PostReactionServices;
 using MeowWoofSocial.Data.Repositories.OrderRepositories;
 using MeowWoofSocial.Data.Repositories.ProductRatingRepositories;
+using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,7 +115,9 @@ builder.Services.AddScoped<IPetStoreProductRepositories, PetStoreProductReposito
 builder.Services.AddScoped<IPetStoreProductAttachmentRepositories, PetStoreProductAttachmentRepositories>();
 builder.Services.AddScoped<IPetStoreProductItemRepositories, PetStoreProductItemRepositories>();
 builder.Services.AddScoped<IOrderRepositories, OrderRepositories>();
+builder.Services.AddScoped<IOrderDetailRepositories, OrderDetailRepositories>();
 builder.Services.AddScoped<IProductRatingRepositories, ProductRatingRepositories>();
+builder.Services.AddScoped<IUserAddressRepositories, UserAddressRepositories>();
 
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
