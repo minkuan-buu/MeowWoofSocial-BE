@@ -76,4 +76,17 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
 
         public DateTime? UpdateAt { get; set; }
     }
+
+    public class UserAddressCreateResModel
+    {
+        public Guid Id { get; set; }
+
+        public Guid UserId { get; set; }
+
+        public string Name { get; set; } = null!;
+
+        public string Phone { get; set; } = null!;
+
+        public string Address { get; set; } = null!;
+    }
 }

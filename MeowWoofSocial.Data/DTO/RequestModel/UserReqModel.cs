@@ -52,4 +52,15 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public IFormFile? Avartar { get; set; }
 
     }
+
+    public class  UserAddressCreateReqModel
+    {
+        public Guid UserId { get; set; }
+
+        public string Name { get; set; } = null!;
+
+        public string Phone { get; set; } = null!;
+
+        public string Address { get; set; } = null!;
+    }
 }
