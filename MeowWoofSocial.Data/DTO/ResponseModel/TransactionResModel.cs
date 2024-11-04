@@ -13,4 +13,9 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public decimal TotalPrice { get; set; }
         public string StatusPayment { get; set; } = null!;
     }
+    
+    public class OrderCreateResModel
+    {
+        public Guid Id { get; set; }
+    }
 }
