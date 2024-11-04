@@ -63,4 +63,15 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
         public string Address { get; set; } = null!;
     }
+
+    public class UserAddressUpdateReqModel
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; } = null!;
+
+        public string Phone { get; set; } = null!;
+
+        public string Address { get; set; } = null!;
+    }
 }

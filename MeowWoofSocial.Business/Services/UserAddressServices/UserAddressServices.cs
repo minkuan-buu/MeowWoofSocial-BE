@@ -60,5 +60,38 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
             }
             return result;
         }
+
+        public async Task<DataResultModel<UserAddressUpdateResModel>> UpdateUserAddress(UserAddressUpdateReqModel userAddressReq, string token)
+        {
+            var result = new DataResultModel<UserAddressUpdateResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id && x.UserId == userId);
+
+                if (userAddressReq == null)
+                {
+                    throw new CustomException("Address not found or you do not have permission to update this Pet Store");
+                }
+
+                userAddress.Name = TextConvert.ConvertToUnicodeEscape(userAddressReq.Name ?? string.Empty);
+                userAddress.Phone = userAddressReq.Phone;
+                userAddress.Address = TextConvert.ConvertToUnicodeEscape(userAddressReq.Address ?? string.Empty);
+                userAddress.Status = UserAddressEnums.Active.ToString();
+                userAddress.UpdateAt = DateTime.Now;
+
+                await _userAddressRepo.Update(userAddress);
+
+                var updatedUserAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id, includeProperties: "User");
+
+                result.Data = _mapper.Map<UserAddressUpdateResModel>(updatedUserAddress);
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
     }
 }
