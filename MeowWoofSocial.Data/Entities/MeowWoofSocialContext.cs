@@ -508,14 +508,20 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("Transaction");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CassoRefId)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.CassoTransactionId)
+                .HasMaxLength(100)
+                .IsUnicode(false);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.FinishTransactionAt).HasColumnType("datetime");
             entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(30)
                 .IsUnicode(false);
-            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.OrderId)

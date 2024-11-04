@@ -25,7 +25,7 @@ namespace MeowWoofSocial.API.Controllers
         [HttpPost("receive")]
         public async Task<IActionResult> ReceivePayment()
         {
-            // Read the request body
+            // Đọc nội dung của request body
             var requestBody = await new StreamReader(Request.Body).ReadToEndAsync();
             TransactionResponseDto jsonBody = JsonConvert.DeserializeObject<TransactionResponseDto>(requestBody);
 
@@ -38,8 +38,14 @@ namespace MeowWoofSocial.API.Controllers
             {
                 return BadRequest("Error occurred on the Casso side.");
             }
+    
+            // Đường dẫn tuyệt đối tới file tạm thời
+            string tempPath = Path.Combine(Path.GetTempPath(), "requestBody.txt");
+    
+            // Ghi nội dung request vào file
+            await System.IO.File.WriteAllTextAsync(tempPath, requestBody);
 
-            // Validate secure token from headers
+            // Kiểm tra Secure Token trong header
             var headers = Request.Headers;
             if (!headers.TryGetValue("Secure-Token", out var secureToken) || secureToken != HEADER_SECURE_TOKEN)
             {
@@ -50,5 +56,6 @@ namespace MeowWoofSocial.API.Controllers
 
             return Ok(Result);
         }
+
     }
 }

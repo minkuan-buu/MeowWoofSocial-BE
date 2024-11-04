@@ -16,6 +16,7 @@ using MeowWoofSocial.Business.ApplicationMiddleware;
 using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
+using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
 
 namespace MeowWoofSocial.Business.Services.TransactionServices
@@ -27,11 +28,13 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
         private readonly IOrderRepositories _orderRepositories;
         private readonly IUserAddressRepositories _userAddressRepositories;
         private readonly IOrderDetailRepositories _orderDetailRepositories;
+        private readonly ITransactionRepositories _transactionRepositories;
         private readonly IPetStoreProductItemRepositories _petStoreProductItemRepositories;
         private const string MEMO_PREFIX = "DH"; // Prefix for order ID
 
-        public TransactionServices(IHubContext<TransactionHub> transactionHub, ILogger<TransactionServices> logger, IOrderRepositories orderRepositories, IPetStoreProductItemRepositories petStoreProductItemRepositories, IOrderDetailRepositories orderDetailRepositories, IUserAddressRepositories userAddressRepositories)
+        public TransactionServices(IHubContext<TransactionHub> transactionHub, ILogger<TransactionServices> logger, IOrderRepositories orderRepositories, IPetStoreProductItemRepositories petStoreProductItemRepositories, IOrderDetailRepositories orderDetailRepositories, IUserAddressRepositories userAddressRepositories, ITransactionRepositories transactionRepositories)
         {
+            _transactionRepositories = transactionRepositories;
             _userAddressRepositories = userAddressRepositories;
             _orderDetailRepositories = orderDetailRepositories;
             _petStoreProductItemRepositories = petStoreProductItemRepositories;
@@ -55,7 +58,7 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                 {
                     _logger.LogInformation($"Identified order_id: {orderId}");
 
-                    var Order = await _orderRepositories.GetSingle(x => x.RefId.Equals(orderId.Value.ToString()) && x.Status.Equals(OrderEnums.Pending.ToString()));
+                    var Order = await _orderRepositories.GetSingle(x => x.RefId.Equals(orderId.Value.ToString()) && x.Status.Equals(OrderEnums.Pending.ToString()), includeProperties:"Transactions");
                     if(Order == null)
                     {
                         _logger.LogWarning($"{orderId} is invalid");
@@ -74,9 +77,17 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                             StatusPayment = TransactionEnums.Success.ToString(),
                             TotalPrice = Order.Price
                         };
-
+                        
+                        var TransactionPending = Order.Transactions.FirstOrDefault(x => x.Status.Equals(TransactionEnums.Pending.ToString()));
+                        TransactionPending.Status = TransactionEnums.Success.ToString();
+                        TransactionPending.CassoTransactionId = transaction.Id.ToString();
+                        TransactionPending.CassoRefId = transaction.Tid;
+                        TransactionPending.FinishTransactionAt = transaction.When;
+                        
                         Order.Status = OrderEnums.Success.ToString();
+                        
                         await _orderRepositories.Update(Order);
+                        await _transactionRepositories.Update(TransactionPending);
                         await NotifyClients(orderId.Value, transactionResModel);
                     }
                 }
@@ -226,5 +237,146 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
             var random = new Random();
             return random.Next(10000000, 99999999).ToString();
         }
+        
+        public async Task<DataResultModel<OrderResModel>> GetOrder(Guid id, string token)
+        {
+            var userId = new Guid(Authentication.DecodeToken(token, "userid"));
+            
+            // Lấy đơn hàng từ repository với các thuộc tính liên quan
+            var order = await _orderRepositories.GetSingle(o => o.Id == id && o.UserId == userId && o.Status.Equals(OrderEnums.Pending.ToString()), 
+                includeProperties: "OrderDetails.ProductItem.Product.PetStoreProductAttachments,OrderDetails.ProductItem.Product.PetStore,UserAddress");
+
+            if (order == null)
+            {
+                throw new CustomException("Order not found");
+            }
+
+            // Tạo OrderResModel và ánh xạ các thuộc tính
+            var orderResModel = new OrderResModel
+            {
+                Id = order.Id,
+                RefId = order.RefId,
+                TotalPrice = order.Price,
+                UserAddress = new OrderUserAddress
+                {
+                    Id = order.UserAddress.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Name),
+                    Phone = order.UserAddress.Phone,
+                    Address = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Address)
+                },
+                PetStores = order.OrderDetails
+                    .GroupBy(detail => detail.ProductItem.Product.PetStore.Id) // Nhóm theo PetStore Id
+                    .Select(group => new OrderPetStore
+                    {
+                        Id = group.Key,
+                        Name = TextConvert.ConvertFromUnicodeEscape(group.First().ProductItem.Product.PetStore.Name),
+                        Phone = group.First().ProductItem.Product.PetStore.Phone,
+                        OrderDetails = group.Select(detail => new OrderDetailResModel
+                        {
+                            Id = detail.Id,
+                            Attachment = detail.ProductItem.Product.PetStoreProductAttachments.FirstOrDefault()?.Attachment ?? string.Empty,
+                            ProductName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Product.Name),
+                            ProductItemName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Name),
+                            Quantity = detail.Quantity,
+                            UnitPrice = detail.UnitPrice
+                        }).ToList()
+                    }).ToList()
+            };
+
+            return new DataResultModel<OrderResModel> { Data = orderResModel };
+        }
+
+        public async Task<DataResultModel<TransactionPendingResModel>> CheckRefId(int refId, string token)
+        {
+            try
+            {
+                var userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                
+                var order = await _orderRepositories.GetSingle(
+                    o => o.RefId.Equals(refId.ToString()) && o.UserId == userId && o.Status.Equals(OrderEnums.Pending.ToString()),
+                    includeProperties: "Transactions");
+
+                if (order == null)
+                {
+                    throw new CustomException("Order not found");
+                }
+
+                if (order.Transactions.Any(t => t.Status == TransactionEnums.Success.ToString()))
+                {
+                    throw new CustomException("Order has been paid");
+                }
+
+                var transactionPending = order.Transactions.FirstOrDefault(t => t.Status == TransactionEnums.Pending.ToString());
+
+                if (transactionPending == null)
+                {
+                    transactionPending = new Transaction
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = order.Id,
+                        PaymentMethod = PaymentMethodEnums.BankTransfer.ToString(),
+                        Status = TransactionEnums.Pending.ToString(),
+                        CreateAt = DateTime.Now
+                    };
+                    
+                    await _transactionRepositories.Insert(transactionPending);
+                }
+
+                return new DataResultModel<TransactionPendingResModel>()
+                {
+                    Data = new TransactionPendingResModel()
+                    {
+                        Id = transactionPending.Id
+                    },
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(ex.Message);
+            }
+        }
+
+        public async Task<MessageResultModel> CancelTransaction(Guid id, string token)
+        {
+            try
+            {
+                var userId = new Guid(Authentication.DecodeToken(token, "userid"));
+        
+                var order = await _orderRepositories.GetSingle(
+                    o => o.Transactions.Any(t => t.Id == id && t.Status == TransactionEnums.Pending.ToString()) && o.UserId == userId && o.Status.Equals(OrderEnums.Pending.ToString()),
+                    includeProperties: "Transactions");
+
+                if (order == null)
+                {
+                    throw new CustomException("Order not found");
+                }
+        
+                var transaction = order.Transactions.FirstOrDefault(t => t.Id == id);
+        
+                if (transaction == null)
+                {
+                    throw new CustomException("Transaction not found");
+                }
+        
+                if (transaction.Status != TransactionEnums.Pending.ToString())
+                {
+                    throw new CustomException("Only pending transactions can be canceled");
+                }
+        
+                transaction.Status = TransactionEnums.Canceled.ToString();
+
+                await _transactionRepositories.Update(transaction);
+
+                return new MessageResultModel
+                {
+                    Message = "Ok",
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(ex.Message);
+            }
+        }
+
     }
 }

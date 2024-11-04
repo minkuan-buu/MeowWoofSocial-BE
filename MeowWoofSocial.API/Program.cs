@@ -32,6 +32,7 @@ using MeowWoofSocial.Business.Services.TransactionServices;
 using MeowWoofSocial.Business.Services.PostReactionServices;
 using MeowWoofSocial.Data.Repositories.OrderRepositories;
 using MeowWoofSocial.Data.Repositories.ProductRatingRepositories;
+using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -118,6 +119,7 @@ builder.Services.AddScoped<IOrderRepositories, OrderRepositories>();
 builder.Services.AddScoped<IOrderDetailRepositories, OrderDetailRepositories>();
 builder.Services.AddScoped<IProductRatingRepositories, ProductRatingRepositories>();
 builder.Services.AddScoped<IUserAddressRepositories, UserAddressRepositories>();
+builder.Services.AddScoped<ITransactionRepositories, TransactionRepositories>();
 
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
@@ -134,12 +136,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigin", policy =>
     {
         policy
-              //.WithOrigins("https://meowwoofsocial.com")
-              //.WithOrigins("http://localhost:5173/") // Chỉ định nguồn cụ thể
-              .AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-              //.AllowCredentials(); // Cho phép cookies, authorization headers, hoặc TLS client certificates
+            .WithOrigins("https://meowwoofsocial.com")
+            .WithOrigins("http://localhost:5173") // Chỉ định nguồn cụ thể
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // Cho phép cookies, authorization headers, hoặc TLS client certificates
     });
 });
 
