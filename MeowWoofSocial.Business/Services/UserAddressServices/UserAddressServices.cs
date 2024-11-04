@@ -71,7 +71,7 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
 
                 if (userAddressReq == null)
                 {
-                    throw new CustomException("Address not found or you do not have permission to update this Pet Store");
+                    throw new CustomException("Address not found or you do not have permission to update this Address");
                 }
 
                 userAddress.Name = TextConvert.ConvertToUnicodeEscape(userAddressReq.Name ?? string.Empty);
@@ -85,6 +85,36 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
                 var updatedUserAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id, includeProperties: "User");
 
                 result.Data = _mapper.Map<UserAddressUpdateResModel>(updatedUserAddress);
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+
+        public async Task<DataResultModel<UserAddressSetDefaultResModel>> SetDefaultUserAddress(UserAddressSetDefaultReqModel userAddressReq, string token)
+        {
+            var result = new DataResultModel<UserAddressSetDefaultResModel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id && x.UserId == userId);
+
+                if (userAddressReq == null)
+                {
+                    throw new CustomException("Address not found or you do not have permission to update this Address");
+                }
+
+                userAddress.Status = UserAddressEnums.Default.ToString();
+                userAddress.UpdateAt = DateTime.Now;
+
+                await _userAddressRepo.Update(userAddress);
+
+                var updatedUserAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id, includeProperties: "User");
+
+                result.Data = _mapper.Map<UserAddressSetDefaultResModel>(updatedUserAddress);
 
             }
             catch (Exception ex)

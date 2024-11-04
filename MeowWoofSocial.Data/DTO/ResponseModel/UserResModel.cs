@@ -102,6 +102,15 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
 
         public string Address { get; set; } = null!;
 
-        public DateTime CreateAt { get; set; }
+        public DateTime UpdateAt { get; set; }
+    }
+
+    public class UserAddressSetDefaultResModel
+    {
+        public Guid Id { get; set; }
+
+        public string Status { get; set; } = null!;
+
+        public DateTime UpdateAt { get; set; }
     }
 }

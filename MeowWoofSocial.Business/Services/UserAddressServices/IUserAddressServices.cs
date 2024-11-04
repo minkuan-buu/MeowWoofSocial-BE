@@ -12,5 +12,6 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
     {
         Task <DataResultModel<UserAddressCreateResModel>> CreateUserAddress(UserAddressCreateReqModel userAddressReq, string token);
         Task<DataResultModel<UserAddressUpdateResModel>> UpdateUserAddress(UserAddressUpdateReqModel userAddressReq, string token);
+        Task<DataResultModel<UserAddressSetDefaultResModel>> SetDefaultUserAddress(UserAddressSetDefaultReqModel userAddressReq, string token);
     }
 }

@@ -74,4 +74,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
         public string Address { get; set; } = null!;
     }
+
+    public class UserAddressSetDefaultReqModel
+    {
+        public Guid Id { get; set; }
+    }
 }

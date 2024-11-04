@@ -360,6 +360,14 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Address)));
+
+            CreateMap<UserAddressSetDefaultReqModel, UserAddress>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+
+            CreateMap<UserAddress, UserAddressSetDefaultResModel>()
+               .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+
         }
     }
 }
