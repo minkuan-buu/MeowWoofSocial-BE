@@ -368,6 +368,10 @@ namespace MeowWoofSocial.Business.MapperProfiles
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
 
+            CreateMap<UserAddressDeleteReqModel, UserAddress>();
+
+            CreateMap<UserAddress, UserAddressDeleteResModel>();
+
         }
     }
 }

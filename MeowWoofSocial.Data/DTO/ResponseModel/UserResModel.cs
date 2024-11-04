@@ -113,4 +113,9 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
 
         public DateTime UpdateAt { get; set; }
     }
+
+    public class UserAddressDeleteResModel
+    {
+        public Guid Id { get; set; }
+    }
 }

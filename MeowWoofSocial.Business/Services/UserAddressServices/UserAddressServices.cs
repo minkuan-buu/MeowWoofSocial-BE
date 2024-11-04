@@ -123,5 +123,34 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
             }
             return result;
         }
+
+        public async Task<MessageResultModel> DeleteUserAddress(UserAddressDeleteReqModel userAddressDeleteReq, string token)
+        {
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userAddess = await _userAddressRepo.GetSingle(p => p.Id == userAddressDeleteReq.UserAddressId);
+                if (userAddess == null)
+                {
+                    throw new CustomException("User Address not found.");
+                }
+                if (userAddess.UserId != userId)
+                {
+                    throw new CustomException("User Address item is not belong to user.");
+                }
+
+                await _userAddressRepo.Delete(userAddess);
+
+                var result = _mapper.Map<UserAddressDeleteResModel>(userAddess);
+                return new MessageResultModel
+                {
+                    Message = "Ok"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"Error removing address: {ex.Message}");
+            }
+        }
     }
 }

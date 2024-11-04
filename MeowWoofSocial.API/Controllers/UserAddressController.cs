@@ -68,5 +68,21 @@ namespace MeowWoofSocial.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpDelete("delete-user-address")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> DeleteUserAddress([FromBody] UserAddressDeleteReqModel userAddressDeleteReq)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _userAddressServices.DeleteUserAddress(userAddressDeleteReq, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

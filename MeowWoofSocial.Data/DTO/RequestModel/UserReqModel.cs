@@ -79,4 +79,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     {
         public Guid Id { get; set; }
     }
+
+    public class UserAddressDeleteReqModel
+    {
+        public Guid UserAddressId { get; set; }
+    }
 }
