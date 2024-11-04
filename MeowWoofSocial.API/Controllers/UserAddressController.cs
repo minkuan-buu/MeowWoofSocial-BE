@@ -84,5 +84,13 @@ namespace MeowWoofSocial.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("user/{UserId}")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> GetUserPost(Guid UserId)
+        {
+            var result = await _userAddressServices.GetUserAddress(UserId);
+            return Ok(result);
+        }
     }
 }

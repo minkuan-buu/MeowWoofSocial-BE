@@ -152,5 +152,35 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
                 throw new CustomException($"Error removing address: {ex.Message}");
             }
         }
+
+        public async Task<ListDataResultModel<UserAddressCreateResModel>> GetUserAddress(Guid userId)
+        {
+            try
+            {
+                List<UserAddressCreateResModel> userAddress = new();
+
+                var allUserAddrees = await _userAddressRepo.GetList(x => x.UserId.Equals(userId));
+
+                userAddress = allUserAddrees
+                    .Select(x => new UserAddressCreateResModel
+                    {
+                        Id = x.Id,
+                        UserId = x.UserId,
+                        Name = x.Name,
+                        Phone = x.Phone,
+                        Address = x.Address
+                    })
+                    .ToList();
+
+                return new ListDataResultModel<UserAddressCreateResModel>
+                {
+                    Data = userAddress
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred while fetching User Address: {ex.Message}");
+            }
+        }
     }
 }
