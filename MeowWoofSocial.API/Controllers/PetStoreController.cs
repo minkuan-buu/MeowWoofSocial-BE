@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MeowWoofSocial.API.Controllers
 {
+    [Route("api/shop")]
     [ApiController]
     public class PetStoreController : ControllerBase
     {

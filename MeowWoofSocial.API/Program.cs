@@ -34,6 +34,7 @@ using MeowWoofSocial.Data.Repositories.OrderRepositories;
 using MeowWoofSocial.Data.Repositories.ProductRatingRepositories;
 using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
+using MeowWoofSocial.Business.Services.UserAddressServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,6 +130,7 @@ builder.Services.AddScoped<IPostReactionServices, PostReactionServices>();
 builder.Services.AddScoped<IPetStoreServices, PetStoreServices>();
 builder.Services.AddScoped<IPetStoreProductServices, PetStoreProductServices>();
 builder.Services.AddScoped<ITransactionServices, TransactionServices>();
+builder.Services.AddScoped<IUserAddressServices, UserAddressServices>();
 
 //=========================================== CORS ================================================
 builder.Services.AddCors(options =>
