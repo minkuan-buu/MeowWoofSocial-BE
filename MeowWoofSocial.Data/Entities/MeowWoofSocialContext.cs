@@ -648,9 +648,13 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Age)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+            entity.Property(e => e.Attachment)
+                .HasMaxLength(1000)
+                .IsUnicode(false);
             entity.Property(e => e.Breed)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Gender)
                 .HasMaxLength(10)
                 .IsUnicode(false);
@@ -660,6 +664,7 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Type)
                 .HasMaxLength(30)
                 .IsUnicode(false);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
             entity.Property(e => e.Weight).HasColumnType("decimal(4, 1)");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserPets)
