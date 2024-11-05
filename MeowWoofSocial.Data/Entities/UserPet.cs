@@ -25,7 +25,7 @@ public partial class UserPet
 
     public DateTime CreateAt { get; set; }
 
-    public DateTime UpdateAt { get; set; }
+    public DateTime? UpdateAt { get; set; }
 
     public virtual ICollection<PetCareBookingDetail> PetCareBookingDetails { get; set; } = new List<PetCareBookingDetail>();
 
