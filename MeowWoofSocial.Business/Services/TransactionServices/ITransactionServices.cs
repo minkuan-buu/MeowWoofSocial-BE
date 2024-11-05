@@ -12,5 +12,8 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
     {
         public Task<MessageResultModel> HandleTransactions(TransactionResponseDto transactions);
         public Task<DataResultModel<OrderCreateResModel>> CreateOrder(List<OrderDetailCreateReqModel> request, string token);
+        public Task<DataResultModel<OrderResModel>> GetOrder(Guid id, string token);
+        public Task<DataResultModel<TransactionPendingResModel>> CheckRefId(int refId, string token);
+        public Task<MessageResultModel> CancelTransaction(Guid id, string token);
     }
 }
