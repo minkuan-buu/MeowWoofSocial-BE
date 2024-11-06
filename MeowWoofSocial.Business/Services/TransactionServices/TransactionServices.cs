@@ -18,6 +18,7 @@ using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
 using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
+using AutoMapper;
 
 namespace MeowWoofSocial.Business.Services.TransactionServices
 {
@@ -26,14 +27,16 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
         private readonly IHubContext<TransactionHub> _transactionHub;
         private readonly ILogger<TransactionServices> _logger;
         private readonly IOrderRepositories _orderRepositories;
+        private readonly IMapper _mapper;
         private readonly IUserAddressRepositories _userAddressRepositories;
         private readonly IOrderDetailRepositories _orderDetailRepositories;
         private readonly ITransactionRepositories _transactionRepositories;
         private readonly IPetStoreProductItemRepositories _petStoreProductItemRepositories;
         private const string MEMO_PREFIX = "DH"; // Prefix for order ID
 
-        public TransactionServices(IHubContext<TransactionHub> transactionHub, ILogger<TransactionServices> logger, IOrderRepositories orderRepositories, IPetStoreProductItemRepositories petStoreProductItemRepositories, IOrderDetailRepositories orderDetailRepositories, IUserAddressRepositories userAddressRepositories, ITransactionRepositories transactionRepositories)
+        public TransactionServices(IHubContext<TransactionHub> transactionHub, ILogger<TransactionServices> logger, IOrderRepositories orderRepositories, IPetStoreProductItemRepositories petStoreProductItemRepositories, IOrderDetailRepositories orderDetailRepositories, IUserAddressRepositories userAddressRepositories, ITransactionRepositories transactionRepositories, IMapper mapper)
         {
+            _mapper = mapper;
             _transactionRepositories = transactionRepositories;
             _userAddressRepositories = userAddressRepositories;
             _orderDetailRepositories = orderDetailRepositories;
@@ -84,7 +87,7 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                         TransactionPending.CassoRefId = transaction.Tid;
                         TransactionPending.FinishTransactionAt = transaction.When;
                         
-                        Order.Status = OrderEnums.Success.ToString();
+                        Order.Status = OrderEnums.Delivering.ToString();
                         
                         await _orderRepositories.Update(Order);
                         await _transactionRepositories.Update(TransactionPending);
@@ -257,13 +260,14 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                 Id = order.Id,
                 RefId = order.RefId,
                 TotalPrice = order.Price,
-                UserAddress = new OrderUserAddress
+                UserAddress = order.UserAddress != null ? new OrderUserAddress
                 {
                     Id = order.UserAddress.Id,
                     Name = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Name),
                     Phone = order.UserAddress.Phone,
-                    Address = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Address)
-                },
+                    Address = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Address),
+                    IsDefault = order.UserAddress.Status.Equals(UserAddressEnums.Default.ToString())
+                } : null,
                 PetStores = order.OrderDetails
                     .GroupBy(detail => detail.ProductItem.Product.PetStore.Id) // Nhóm theo PetStore Id
                     .Select(group => new OrderPetStore
@@ -328,6 +332,38 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                     {
                         Id = transactionPending.Id
                     },
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(ex.Message);
+            }
+        }
+
+        public async Task<DataResultModel<UserAddressCreateResModel>> ChangeOrderAddress(Guid orderId, Guid addressId, string token)
+        {
+            try
+            {
+                var userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var order = await _orderRepositories.GetSingle(x => x.Id.Equals(orderId) && x.UserId.Equals(userId) && x.Status.Equals(OrderEnums.Pending.ToString()));
+                
+                var newAddress = await _userAddressRepositories.GetSingle(x => x.UserId.Equals(userId) && x.Id.Equals(addressId));
+
+                if (order == null) {
+                    throw new CustomException("Order not found!");
+                }
+
+                if(newAddress == null)
+                {
+                    throw new CustomException("Address not found!");
+                }
+
+                order.UpdateAt = DateTime.Now;
+                order.UserAddressId = newAddress.Id;
+                await _orderRepositories.Update(order);
+                return new DataResultModel<UserAddressCreateResModel>()
+                {
+                    Data = _mapper.Map<UserAddressCreateResModel>(newAddress)
                 };
             }
             catch (Exception ex)
