@@ -55,8 +55,6 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
     public class  UserAddressCreateReqModel
     {
-        public Guid UserId { get; set; }
-
         public string Name { get; set; } = null!;
 
         public string Phone { get; set; } = null!;
@@ -66,8 +64,6 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
     public class UserAddressUpdateReqModel
     {
-        public Guid Id { get; set; }
-
         public string Name { get; set; } = null!;
 
         public string Phone { get; set; } = null!;
