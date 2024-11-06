@@ -352,7 +352,6 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Address)));
 
             CreateMap<UserAddressUpdateReqModel, UserAddress>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Address)));
 
@@ -366,7 +365,7 @@ namespace MeowWoofSocial.Business.MapperProfiles
 
             CreateMap<UserAddress, UserAddressSetDefaultResModel>()
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+               .ForMember(dest => dest.IsDefault, opt => opt.MapFrom(src => src.Status.Equals(UserAddressEnums.Default.ToString())));
 
             CreateMap<UserAddressDeleteReqModel, UserAddress>();
 

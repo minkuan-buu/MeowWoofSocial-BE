@@ -41,18 +41,19 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
                     throw new CustomException("You are banned from creating address due to violate of terms!");
                 }
 
+                var UserAddrress = await _userAddressRepo.GetList(x => x.UserId.Equals(userId));
+
                 var newUserAddressId = Guid.NewGuid();
                 var userAddressEntity = _mapper.Map<UserAddress>(userAddressReq);
                 userAddressEntity.Id = newUserAddressId;
                 userAddressEntity.UserId = userId;
-                userAddressEntity.Name = TextConvert.ConvertToUnicodeEscape(userAddressReq.Name);
-                userAddressEntity.Phone = userAddressReq.Phone;
-                userAddressEntity.Address = TextConvert.ConvertToUnicodeEscape(userAddressReq.Address);
                 userAddressEntity.CreateAt = DateTime.Now;
-                userAddressEntity.Status = UserAddressEnums.Active.ToString();
+                userAddressEntity.Status = UserAddrress.Count() != 0 ? UserAddressEnums.Active.ToString() : UserAddressEnums.Default.ToString();
 
                 await _userAddressRepo.Insert(userAddressEntity);
-                result.Data = _mapper.Map<UserAddressCreateResModel>(userAddressEntity);
+                var ResultReturn = _mapper.Map<UserAddressCreateResModel>(userAddressEntity);
+                ResultReturn.IsDefault = userAddressEntity.Status.Equals(UserAddressEnums.Default.ToString());
+                result.Data = ResultReturn;
             }
             catch (Exception ex)
             {
@@ -61,31 +62,29 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
             return result;
         }
 
-        public async Task<DataResultModel<UserAddressUpdateResModel>> UpdateUserAddress(UserAddressUpdateReqModel userAddressReq, string token)
+        public async Task<DataResultModel<UserAddressUpdateResModel>> UpdateUserAddress(Guid id, UserAddressUpdateReqModel userAddressReq, string token)
         {
             var result = new DataResultModel<UserAddressUpdateResModel>();
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var userAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id && x.UserId == userId);
+                var userAddress = await _userAddressRepo.GetSingle(x => x.Id == id && x.UserId == userId);
 
                 if (userAddressReq == null)
                 {
                     throw new CustomException("Address not found or you do not have permission to update this Address");
                 }
 
-                userAddress.Name = TextConvert.ConvertToUnicodeEscape(userAddressReq.Name ?? string.Empty);
+                userAddress.Name = TextConvert.ConvertToUnicodeEscape(userAddressReq.Name);
                 userAddress.Phone = userAddressReq.Phone;
-                userAddress.Address = TextConvert.ConvertToUnicodeEscape(userAddressReq.Address ?? string.Empty);
-                userAddress.Status = UserAddressEnums.Active.ToString();
+                userAddress.Address = TextConvert.ConvertToUnicodeEscape(userAddressReq.Address);
                 userAddress.UpdateAt = DateTime.Now;
 
                 await _userAddressRepo.Update(userAddress);
 
-                var updatedUserAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id, includeProperties: "User");
-
-                result.Data = _mapper.Map<UserAddressUpdateResModel>(updatedUserAddress);
-
+                var ResultReturn = _mapper.Map<UserAddressUpdateResModel>(userAddress);
+                ResultReturn.IsDefault = userAddress.Status.Equals(UserAddressEnums.Default.ToString());
+                result.Data = ResultReturn;
             }
             catch (Exception ex)
             {
@@ -94,25 +93,30 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
             return result;
         }
 
-        public async Task<DataResultModel<UserAddressSetDefaultResModel>> SetDefaultUserAddress(UserAddressSetDefaultReqModel userAddressReq, string token)
+        public async Task<DataResultModel<UserAddressSetDefaultResModel>> SetDefaultUserAddress(Guid id, string token)
         {
             var result = new DataResultModel<UserAddressSetDefaultResModel>();
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var userAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id && x.UserId == userId);
+                var userAddress = await _userAddressRepo.GetSingle(x => x.Id == id && x.UserId == userId);
+                var currentDefaultAddress = await _userAddressRepo.GetSingle(x => x.Status.Equals(UserAddressEnums.Default.ToString()));
 
-                if (userAddressReq == null)
+                if (userAddress == null)
                 {
                     throw new CustomException("Address not found or you do not have permission to update this Address");
                 }
+
+                currentDefaultAddress.UpdateAt = DateTime.Now;
+                currentDefaultAddress.Status = UserAddressEnums.Active.ToString();
 
                 userAddress.Status = UserAddressEnums.Default.ToString();
                 userAddress.UpdateAt = DateTime.Now;
 
                 await _userAddressRepo.Update(userAddress);
+                await _userAddressRepo.Update(currentDefaultAddress);
 
-                var updatedUserAddress = await _userAddressRepo.GetSingle(x => x.Id == userAddressReq.Id, includeProperties: "User");
+                var updatedUserAddress = await _userAddressRepo.GetSingle(x => x.Id == id, includeProperties: "User");
 
                 result.Data = _mapper.Map<UserAddressSetDefaultResModel>(updatedUserAddress);
 
@@ -124,12 +128,12 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
             return result;
         }
 
-        public async Task<MessageResultModel> DeleteUserAddress(UserAddressDeleteReqModel userAddressDeleteReq, string token)
+        public async Task<MessageResultModel> DeleteUserAddress(Guid id, string token)
         {
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var userAddess = await _userAddressRepo.GetSingle(p => p.Id == userAddressDeleteReq.UserAddressId);
+                var userAddess = await _userAddressRepo.GetSingle(p => p.Id == id);
                 if (userAddess == null)
                 {
                     throw new CustomException("User Address not found.");
@@ -153,10 +157,11 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
             }
         }
 
-        public async Task<ListDataResultModel<UserAddressCreateResModel>> GetUserAddress(Guid userId)
+        public async Task<ListDataResultModel<UserAddressCreateResModel>> GetUserAddress(string token)
         {
             try
             {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
                 List<UserAddressCreateResModel> userAddress = new();
 
                 var allUserAddrees = await _userAddressRepo.GetList(x => x.UserId.Equals(userId));
@@ -165,10 +170,10 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
                     .Select(x => new UserAddressCreateResModel
                     {
                         Id = x.Id,
-                        UserId = x.UserId,
-                        Name = x.Name,
+                        Name = TextConvert.ConvertFromUnicodeEscape(x.Name),
                         Phone = x.Phone,
-                        Address = x.Address
+                        Address = TextConvert.ConvertFromUnicodeEscape(x.Address),
+                        IsDefault = x.Status.Equals(UserAddressEnums.Default.ToString())
                     })
                     .ToList();
 

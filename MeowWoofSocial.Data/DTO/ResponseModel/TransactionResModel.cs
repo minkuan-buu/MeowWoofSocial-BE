@@ -29,7 +29,7 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public Guid Id { get; set; }
         public string RefId { get; set; }
         public List<OrderPetStore> PetStores { get; set; } = null!;
-        public OrderUserAddress UserAddress { get; set; } = null!;
+        public OrderUserAddress? UserAddress { get; set; } = null!;
         public decimal TotalPrice { get; set; }
     }
 
@@ -57,5 +57,6 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public string Name { get; set; } = null!;
         public string Phone { get; set; } = null!;
         public string Address { get; set; } = null!;
+        public bool IsDefault { get; set; }
     }
 }
