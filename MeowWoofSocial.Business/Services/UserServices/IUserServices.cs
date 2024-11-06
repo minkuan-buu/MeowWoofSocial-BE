@@ -15,5 +15,6 @@ namespace MeowWoofSocial.Business.Services.UserServices
         Task<MessageResultModel> RegisterUser(UserRegisterReqModel newUser);
         Task<DataResultModel<UserProfilePageResModel>> GetUserById(Guid userId, string token);
         Task<DataResultModel<UpdateUserProfileResModel>> UpdateUserProfile(UpdateUserProfileReqModel profileUpdateReq, string token);
+        Task<DataResultModel<UpdateUserAvartarResModel>> UpdateUserAvartar(UpdateUserAvartarReqModel profileUpdateReq, string token);
     }
 }

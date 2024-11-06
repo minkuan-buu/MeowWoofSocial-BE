@@ -4,12 +4,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>6d56fd4c-2835-4b0a-9d8f-8476bcaf7834</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
     <PackageReference Include="MailKit" Version="4.7.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="MimeKit" Version="4.7.1" />
   </ItemGroup>
 

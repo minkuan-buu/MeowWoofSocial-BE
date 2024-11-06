@@ -15,7 +15,11 @@ public partial class Transaction
 
     public DateTime CreateAt { get; set; }
 
-    public DateTime? UpdateAt { get; set; }
+    public string? CassoRefId { get; set; }
+
+    public string? CassoTransactionId { get; set; }
+
+    public DateTime? FinishTransactionAt { get; set; }
 
     public virtual Order Order { get; set; } = null!;
 }

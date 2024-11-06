@@ -36,12 +36,48 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     public class UpdateUserProfileReqModel
     {
         public Guid Id { get; set; }
+
+        public string Email { get; set; } = null!;
         
         public string Name { get; set; } = null!;
+  
+        public string Phone { get; set; } = null!;
+        
+    }
+
+    public class UpdateUserAvartarReqModel
+    {
+        public Guid Id { get; set; }
 
         public IFormFile? Avartar { get; set; }
 
+    }
+
+    public class  UserAddressCreateReqModel
+    {
+        public string Name { get; set; } = null!;
+
         public string Phone { get; set; } = null!;
-        
+
+        public string Address { get; set; } = null!;
+    }
+
+    public class UserAddressUpdateReqModel
+    {
+        public string Name { get; set; } = null!;
+
+        public string Phone { get; set; } = null!;
+
+        public string Address { get; set; } = null!;
+    }
+
+    public class UserAddressSetDefaultReqModel
+    {
+        public Guid Id { get; set; }
+    }
+
+    public class UserAddressDeleteReqModel
+    {
+        public Guid UserAddressId { get; set; }
     }
 }
