@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MeowWoofSocial.API.Controllers
 {
-    [Route("api/address")]
+    [Route("api/user")]
     [ApiController]
     public class UserAddressController : ControllerBase
     {
@@ -20,7 +20,7 @@ namespace MeowWoofSocial.API.Controllers
             _userAddressServices = userAddressServices;
         }
 
-        [HttpPost("create-user-address")]
+        [HttpPost("address")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
         public async Task<IActionResult> CreatePetStore([FromBody] UserAddressCreateReqModel userAddressReq)
         {
@@ -36,14 +36,14 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
 
-        [HttpPut("update-user-address")]
+        [HttpPut("address/{id}")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> UpdatePetStore([FromBody] UserAddressUpdateReqModel userAddressReq)
+        public async Task<IActionResult> UpdatePetStore(Guid id, [FromBody] UserAddressUpdateReqModel userAddressReq)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _userAddressServices.UpdateUserAddress(userAddressReq, token);
+                var result = await _userAddressServices.UpdateUserAddress(id, userAddressReq, token);
                 return Ok(result);
             }
             catch (CustomException ex)
@@ -52,15 +52,15 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
 
-        [HttpPut("set-default-user-address")]
+        [HttpPut("address/default/{id}")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> SetDefaultUserAddress([FromBody] UserAddressSetDefaultReqModel userAddressReq)
+        public async Task<IActionResult> SetDefaultUserAddress(Guid id)
 
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _userAddressServices.SetDefaultUserAddress(userAddressReq, token);
+                var result = await _userAddressServices.SetDefaultUserAddress(id, token);
                 return Ok(result);
             }
             catch (CustomException ex)
@@ -69,14 +69,14 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
 
-        [HttpDelete("delete-user-address")]
+        [HttpDelete("address/{id}")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> DeleteUserAddress([FromBody] UserAddressDeleteReqModel userAddressDeleteReq)
+        public async Task<IActionResult> DeleteUserAddress(Guid id)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _userAddressServices.DeleteUserAddress(userAddressDeleteReq, token);
+                var result = await _userAddressServices.DeleteUserAddress(id, token);
                 return Ok(result);
             }
             catch (CustomException ex)
@@ -85,11 +85,12 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
 
-        [HttpGet("user/{UserId}")]
+        [HttpGet("addresses")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> GetUserPost(Guid UserId)
+        public async Task<IActionResult> GetUserPost()
         {
-            var result = await _userAddressServices.GetUserAddress(UserId);
+            var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var result = await _userAddressServices.GetUserAddress(token);
             return Ok(result);
         }
     }
