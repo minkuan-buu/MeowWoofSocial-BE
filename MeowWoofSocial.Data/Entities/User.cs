@@ -31,6 +31,8 @@ public partial class User
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
+    public virtual ICollection<Otp> Otps { get; set; } = new List<Otp>();
+
     public virtual ICollection<PetCareBooking> PetCareBookings { get; set; } = new List<PetCareBooking>();
 
     public virtual ICollection<PetStoreRating> PetStoreRatings { get; set; } = new List<PetStoreRating>();

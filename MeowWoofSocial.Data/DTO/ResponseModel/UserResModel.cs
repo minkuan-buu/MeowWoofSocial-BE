@@ -116,4 +116,9 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
     }
+
+    public class UserTemp
+    {
+        public string TempToken { get; set; } = null!;
+    }
 }

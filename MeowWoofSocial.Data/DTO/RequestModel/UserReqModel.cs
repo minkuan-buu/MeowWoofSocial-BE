@@ -80,4 +80,16 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     {
         public Guid UserAddressId { get; set; }
     }
+
+    public class UserResetPasswordReqModel
+    {
+        public string NewPassword { get; set; } = null!;
+        public string ConfirmPassword { get; set; } = null!;
+    }
+
+    public class UserVerifyOTPReqModel
+    {
+        public string Email { get; set; } = null!;
+        public string OTPCode { get; set; } = null!;
+    }
 }

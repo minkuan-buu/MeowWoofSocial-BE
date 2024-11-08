@@ -19,6 +19,8 @@ public partial class MeowWoofSocialContext : DbContext
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
 
+    public virtual DbSet<Otp> Otps { get; set; }
+
     public virtual DbSet<PetCareBooking> PetCareBookings { get; set; }
 
     public virtual DbSet<PetCareBookingDetail> PetCareBookingDetails { get; set; }
@@ -156,6 +158,28 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasForeignKey(d => d.ProductItemId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__OrderDeta__Produ__6754599E");
+        });
+
+        modelBuilder.Entity<Otp>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("OTP_pk");
+
+            entity.ToTable("OTP");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Code)
+                .HasMaxLength(6)
+                .IsUnicode(false);
+            entity.Property(e => e.ExpiredDate).HasColumnType("datetime");
+            entity.Property(e => e.IsUsed).HasColumnName("isUsed");
+            entity.Property(e => e.Status)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Otps)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("OTP_User_Id_fk");
         });
 
         modelBuilder.Entity<PetCareBooking>(entity =>
@@ -652,17 +676,17 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasMaxLength(1000)
                 .IsUnicode(false);
             entity.Property(e => e.Breed)
-                .HasMaxLength(100)
+                .HasMaxLength(500)
                 .IsUnicode(false);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Gender)
-                .HasMaxLength(10)
+                .HasMaxLength(100)
                 .IsUnicode(false);
             entity.Property(e => e.Name)
-                .HasMaxLength(150)
+                .HasMaxLength(450)
                 .IsUnicode(false);
             entity.Property(e => e.Type)
-                .HasMaxLength(30)
+                .HasMaxLength(200)
                 .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
             entity.Property(e => e.Weight).HasColumnType("decimal(4, 1)");
