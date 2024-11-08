@@ -8,6 +8,7 @@ using System.Text.Encodings.Web;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MeowWoofSocial.API.Middleware
 {
@@ -29,7 +30,7 @@ namespace MeowWoofSocial.API.Middleware
             var requestPath = Context.Request.Path;
 
             // Allow the login endpoint to be bypassed
-            if (requestPath.StartsWithSegments("/api/authentication/login") || requestPath.StartsWithSegments("/api/authentication/register"))
+            if (requestPath.StartsWithSegments("/api/auth/login") || requestPath.StartsWithSegments("/api/auth/register"))
             {
                 return AuthenticateResult.NoResult(); // Cho phép request đi qua mà không xác thực
             }
@@ -75,6 +76,23 @@ namespace MeowWoofSocial.API.Middleware
                     return AuthenticateResult.Fail("Unauthorized");
                 }
 
+                // Kiểm tra yêu cầu đặt lại mật khẩu
+                if (requestPath.StartsWithSegments("/api/auth/reset-password"))
+                {
+                    var typeClaim = identity.FindFirst("type")?.Value;
+                    if (typeClaim != "reset")
+                    {
+                        return AuthenticateResult.Fail("Invalid token for reset-password.");
+                    }
+                } else
+                {
+                    var typeClaim = identity.FindFirst("type")?.Value;
+                    if (typeClaim == "reset")
+                    {
+                        return AuthenticateResult.Fail("Invalid token for reset-password.");
+                    }
+                }
+
                 // You can further check user status or other conditions by querying your repository
                 var userIdClaim = identity.FindFirst("userid")?.Value;
                 if (Guid.TryParse(userIdClaim, out var userId))
@@ -84,6 +102,14 @@ namespace MeowWoofSocial.API.Middleware
                     {
                         return AuthenticateResult.Fail("User is inactive or not found.");
                     }
+                }
+
+                // Kiểm tra vai trò yêu cầu cho endpoint (nếu có)
+                var endpointRoles = GetEndpointRoles();
+                var userRoles = identity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+                if (endpointRoles.Any() && !userRoles.Any(ur => endpointRoles.Contains(ur)))
+                {
+                    return AuthenticateResult.Fail("User does not have the required role.");
                 }
 
                 var ticket = new AuthenticationTicket(claimsPrincipal, Scheme.Name);
@@ -104,6 +130,27 @@ namespace MeowWoofSocial.API.Middleware
                 // Lỗi khác
                 return AuthenticateResult.Fail($"An error occurred: {ex.Message}");
             }
+        }
+        private List<string> GetEndpointRoles()
+        {
+            var endpoint = Context.GetEndpoint();
+            if (endpoint == null)
+            {
+                return new List<string>();
+            }
+
+            var authorizeAttributes = endpoint.Metadata.GetOrderedMetadata<AuthorizeAttribute>();
+            var roles = new List<string>();
+
+            foreach (var attribute in authorizeAttributes)
+            {
+                if (!string.IsNullOrEmpty(attribute.Roles))
+                {
+                    roles.AddRange(attribute.Roles.Split(',').Select(r => r.Trim()));
+                }
+            }
+
+            return roles;
         }
     }
 }
