@@ -3,6 +3,7 @@ using MeowWoofSocial.Data.DTO.RequestModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MeowWoofSocial.Data.DTO.Custom;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MeowWoofSocial.API.Controllers
 {
@@ -37,6 +38,22 @@ namespace MeowWoofSocial.API.Controllers
             {
                 var result = await _userServices.RegisterUser(newUser);
                 return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> ResetPassword([FromBody] UserResetPasswordReqModel User)
+        {
+            try
+            {
+                string token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var Result = await _userServices.ResetPassword(User, token);
+                return Ok(Result);
             }
             catch (CustomException ex)
             {
