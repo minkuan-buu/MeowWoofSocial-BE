@@ -255,7 +255,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name),
+                            Avatar = x.User.Avartar
                         }
                     }).ToList(),
                 Comment = post.PostReactions
@@ -269,7 +270,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name),
+                            Avatar = x.User.Avartar
                         },
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt
@@ -312,7 +314,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name),
+                            Avatar = x.User.Avartar
                         }
                     }).ToList(),
                 Comment = post.PostReactions
@@ -326,7 +329,8 @@ namespace MeowWoofSocial.Business.Services.PostServices
                         Author = new PostAuthorResModel
                         {
                             Id = x.User.Id,
-                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name)
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.User.Name),
+                            Avatar = x.User.Avartar
                         },
                         CreateAt = x.CreateAt,
                         UpdatedAt = x.UpdateAt

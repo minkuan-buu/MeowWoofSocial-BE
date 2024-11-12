@@ -2,6 +2,9 @@
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Identity.Client.Extensions.Msal;
+using System.Text.RegularExpressions;
+using System.Text;
+using MeowWoofSocial.Business.ApplicationMiddleware;
 
 namespace MeowWoofSocial.Business.Services.CloudServices;
 
@@ -24,7 +27,7 @@ public class CloudStorage : ICloudStorage
             {
                 await file.CopyToAsync(stream);
                 stream.Seek(0, SeekOrigin.Begin);
-                var objectName = $"{filePath}/{file.FileName}";
+                var objectName = $"{filePath}/{TextConvert.ConvertToUnSign(file.FileName)}";
                 _storageClient.UploadObject(BucketName, objectName, file.ContentType, stream);
                 uploadUrl.Add($"https://storage.googleapis.com/{BucketName}/{objectName}");
             };
@@ -38,7 +41,7 @@ public class CloudStorage : ICloudStorage
         {
             await file.CopyToAsync(stream);
             stream.Seek(0, SeekOrigin.Begin);
-            var objectName = $"{filePath}/{file.FileName}";
+            var objectName = $"{filePath}/{TextConvert.ConvertToUnSign(file.FileName)}";
             _storageClient.UploadObject(BucketName, objectName, file.ContentType, stream);
             return $"https://storage.googleapis.com/{BucketName}/{objectName}";
         }

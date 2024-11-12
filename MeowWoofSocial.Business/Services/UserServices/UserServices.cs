@@ -8,6 +8,8 @@ using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using MeowWoofSocial.Business.Services.CloudServices;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace MeowWoofSocial.Business.Services.UserServices
 {
@@ -159,7 +161,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var userProfile = await _userRepositories.GetSingle(x => x.Id == profileUpdateReq.Id && x.Id == userId);
+                var userProfile = await _userRepositories.GetSingle(x => x.Id.Equals(userId));
 
                 if (userProfile == null || userProfile.Status.Equals(AccountStatusEnums.Inactive))
                 {

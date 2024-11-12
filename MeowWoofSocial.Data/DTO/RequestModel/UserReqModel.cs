@@ -47,8 +47,6 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
     public class UpdateUserAvartarReqModel
     {
-        public Guid Id { get; set; }
-
         public IFormFile? Avartar { get; set; }
 
     }
