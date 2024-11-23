@@ -20,27 +20,42 @@ namespace MeowWoofSocial.Business.Ultilities.Email
             {
                 string from = "minhquandoanngoc@gmail.com";
                 string pass = "vfyy deqv xiaj mils";
+
                 using MailKit.Net.Smtp.SmtpClient smtp = new();
                 await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
                 await smtp.AuthenticateAsync(from, pass);
+
                 foreach (var item in emailReqModels)
                 {
                     MimeMessage message = new();
                     message.From.Add(MailboxAddress.Parse("admin@buubuu.id.vn"));
                     message.To.Add(MailboxAddress.Parse(item.Email));
                     message.Subject = Subject;
-                    message.Body = new TextPart(MimeKit.Text.TextFormat.Html)
+
+                    var bodyBuilder = new BodyBuilder
                     {
-                        Text = item.HtmlContent
+                        HtmlBody = item.HtmlContent
                     };
-                    _ = await smtp.SendAsync(message);
+
+                    var logoPath = "./MeowWoofLogo.webp";
+                    var logoImage = bodyBuilder.LinkedResources.Add(logoPath);
+                    logoImage.ContentId = "MeowWoofLogo";
+
+                    // Gán body vào message
+                    message.Body = bodyBuilder.ToMessageBody();
+
+                    // Gửi email
+                    await smtp.SendAsync(message);
                 }
+
                 await smtp.DisconnectAsync(true);
             }
             catch (Exception e)
             {
+                Console.WriteLine("Error sending email: " + e.Message);
             }
         }
+
 
         //public async Task<bool> SendListEmail(string Subject, List<EmailSendingModel> sendingList)
         //{

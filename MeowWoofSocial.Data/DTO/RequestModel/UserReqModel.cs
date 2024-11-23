@@ -47,8 +47,6 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
 
     public class UpdateUserAvartarReqModel
     {
-        public Guid Id { get; set; }
-
         public IFormFile? Avartar { get; set; }
 
     }
@@ -79,5 +77,17 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     public class UserAddressDeleteReqModel
     {
         public Guid UserAddressId { get; set; }
+    }
+
+    public class UserResetPasswordReqModel
+    {
+        public string NewPassword { get; set; } = null!;
+        public string ConfirmPassword { get; set; } = null!;
+    }
+
+    public class UserVerifyOTPReqModel
+    {
+        public string Email { get; set; } = null!;
+        public string OTPCode { get; set; } = null!;
     }
 }
