@@ -81,35 +81,33 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     {
         public Guid Id { get; set; }
 
-        public Guid UserId { get; set; }
-
         public string Name { get; set; } = null!;
 
         public string Phone { get; set; } = null!;
 
         public string Address { get; set; } = null!;
+
+        public bool? IsDefault { get; set; }
     }
 
     public class UserAddressUpdateResModel
     {
         public Guid Id { get; set; }
 
-        public Guid UserId { get; set; }
-
         public string Name { get; set; } = null!;
 
         public string Phone { get; set; } = null!;
 
         public string Address { get; set; } = null!;
 
-        public DateTime UpdateAt { get; set; }
+        public bool? IsDefault { get; set; }
     }
 
     public class UserAddressSetDefaultResModel
     {
         public Guid Id { get; set; }
 
-        public string Status { get; set; } = null!;
+        public bool IsDefault { get; set; }
 
         public DateTime UpdateAt { get; set; }
     }

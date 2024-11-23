@@ -10,10 +10,10 @@ namespace MeowWoofSocial.Business.Services.UserAddressServices
 {
     public interface IUserAddressServices
     {
-        Task <DataResultModel<UserAddressCreateResModel>> CreateUserAddress(UserAddressCreateReqModel userAddressReq, string token);
-        Task<DataResultModel<UserAddressUpdateResModel>> UpdateUserAddress(UserAddressUpdateReqModel userAddressReq, string token);
-        Task<DataResultModel<UserAddressSetDefaultResModel>> SetDefaultUserAddress(UserAddressSetDefaultReqModel userAddressReq, string token);
-        Task<MessageResultModel> DeleteUserAddress(UserAddressDeleteReqModel userAddressDeleteReq, string token);
-        Task<ListDataResultModel<UserAddressCreateResModel>> GetUserAddress(Guid userId);
+        Task<DataResultModel<UserAddressCreateResModel>> CreateUserAddress(UserAddressCreateReqModel userAddressReq, string token);
+        Task<DataResultModel<UserAddressUpdateResModel>> UpdateUserAddress(Guid id, UserAddressUpdateReqModel userAddressReq, string token);
+        Task<DataResultModel<UserAddressSetDefaultResModel>> SetDefaultUserAddress(Guid id, string token);
+        Task<MessageResultModel> DeleteUserAddress(Guid id, string token);
+        Task<ListDataResultModel<UserAddressCreateResModel>> GetUserAddress(string token);
     }
 }

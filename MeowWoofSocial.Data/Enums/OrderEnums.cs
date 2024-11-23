@@ -10,6 +10,7 @@ namespace MeowWoofSocial.Data.Enums
     {
         Success,
         Pending,
+        Delivering,
         Cancelled
     }
 }
