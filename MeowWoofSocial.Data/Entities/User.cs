@@ -27,9 +27,13 @@ public partial class User
 
     public DateTime? UpdateAt { get; set; }
 
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    public virtual ICollection<Otp> Otps { get; set; } = new List<Otp>();
 
     public virtual ICollection<PetCareBooking> PetCareBookings { get; set; } = new List<PetCareBooking>();
 
