@@ -11,6 +11,8 @@ public partial class MeowWoofSocialContext : DbContext
     {
     }
 
+    public virtual DbSet<Cart> Carts { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
@@ -63,6 +65,26 @@ public partial class MeowWoofSocialContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Cart_pk");
+
+            entity.ToTable("Cart");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.ProductItem).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.ProductItemId)
+                .HasConstraintName("Cart_PetStoreProductItem_Id_fk");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Cart_User_Id_fk");
+        });
+
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Category__3214EC07A943DC61");
