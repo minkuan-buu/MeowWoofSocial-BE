@@ -9,6 +9,7 @@ namespace MeowWoofSocial.Data.Enums
     public enum AccountStatusEnums
     {
         Active,
-        Inactive
+        Inactive,
+        ResetPassword
     }
 }
