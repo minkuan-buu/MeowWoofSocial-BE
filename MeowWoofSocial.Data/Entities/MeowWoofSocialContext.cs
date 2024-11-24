@@ -77,6 +77,7 @@ public partial class MeowWoofSocialContext : DbContext
 
             entity.HasOne(d => d.ProductItem).WithMany(p => p.Carts)
                 .HasForeignKey(d => d.ProductItemId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Cart_PetStoreProductItem_Id_fk");
 
             entity.HasOne(d => d.User).WithMany(p => p.Carts)
