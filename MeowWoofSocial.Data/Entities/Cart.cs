@@ -9,7 +9,7 @@ public partial class Cart
 
     public Guid UserId { get; set; }
 
-    public Guid? ProductItemId { get; set; }
+    public Guid ProductItemId { get; set; }
 
     public int Quantity { get; set; }
 
@@ -17,7 +17,7 @@ public partial class Cart
 
     public DateTime? UpdatedAt { get; set; }
 
-    public virtual PetStoreProductItem? ProductItem { get; set; }
+    public virtual PetStoreProductItem ProductItem { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 }
