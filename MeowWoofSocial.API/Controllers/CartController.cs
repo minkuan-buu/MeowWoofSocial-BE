@@ -43,8 +43,8 @@ namespace MeowWoofSocial.API.Controllers
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                // await _cartServices.AddToCart(token, cartReqModel);
-                return Ok();
+                var result = await _cartServices.AddToCart(cartReqModel, token);
+                return Ok(result);
             }
             catch (CustomException ex)
             {
@@ -59,8 +59,8 @@ namespace MeowWoofSocial.API.Controllers
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                // await _cartServices.UpdateCart(token, cartReqModel);
-                return Ok();
+                var result = await _cartServices.UpdateCart(cartReqModel, token);
+                return Ok(result);
             }
             catch (CustomException ex)
             {
@@ -75,8 +75,8 @@ namespace MeowWoofSocial.API.Controllers
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                // await _cartServices.DeleteCart(token, id);
-                return Ok();
+                var result = await _cartServices.DeleteCart(id, token);
+                return Ok(result);
             }
             catch (CustomException ex)
             {

@@ -55,14 +55,14 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
         
-        [HttpGet("check/{id}")]
+        [HttpGet]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> CheckRefId(int id)
+        public async Task<IActionResult> GetOrders()
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _transactionServices.CheckRefId(id, token);
+                var result = await _transactionServices.GetOrderList(token);
                 return Ok(result);
             }
             catch (CustomException ex)

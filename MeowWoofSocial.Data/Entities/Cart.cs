@@ -17,6 +17,10 @@ public partial class Cart
 
     public DateTime? UpdatedAt { get; set; }
 
+    public Guid? OrderId { get; set; }
+
+    public virtual Order? Order { get; set; }
+
     public virtual PetStoreProductItem ProductItem { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;

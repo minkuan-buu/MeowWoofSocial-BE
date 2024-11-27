@@ -1,5 +1,8 @@
 ﻿using MeowWoofSocial.Business.ApplicationMiddleware;
+using MeowWoofSocial.Data.DTO.Custom;
+using MeowWoofSocial.Data.DTO.RequestModel;
 using MeowWoofSocial.Data.DTO.ResponseModel;
+using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Repositories.CartRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreRepositories;
@@ -22,7 +25,7 @@ public class CartServices : ICartServices
         _userRepositories = userRepositories;
     }
     
-    public async Task<List<CartResModel>> GetCart(string Token)
+    public async Task<ListDataResultModel<CartResModel>> GetCart(string Token)
     {
         Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
 
@@ -57,6 +60,90 @@ public class CartServices : ICartServices
                     };
                 return null;
             }).ToList();
-        return ReturnUserCart;
+        return new ListDataResultModel<CartResModel>()
+        {
+            Data = ReturnUserCart
+        };
+    }
+
+    public async Task<MessageResultModel> AddToCart(CartReqModel cartReqModel, string Token)
+    {
+        Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
+        var checkExist = await _cartRepositories.GetSingle(x => x.ProductItemId.Equals(cartReqModel.ProductItemId) && x.UserId.Equals(UserId));
+        if (checkExist != null)
+        {
+            checkExist.Quantity += cartReqModel.Quantity;
+            checkExist.UpdatedAt = DateTime.Now;
+            await _cartRepositories.Update(checkExist);
+        }
+        else
+        {
+            var productItem = await _productItemRepositories.GetSingle(x => x.Id.Equals(cartReqModel.ProductItemId));
+            if (productItem == null)
+                throw new CustomException("Product Item not found");
+            if (productItem.Quantity < cartReqModel.Quantity)
+                throw new CustomException("Product Item out of stock");
+            var cart = new Cart()
+            {
+                Id = Guid.NewGuid(),
+                UserId = UserId,
+                ProductItemId = cartReqModel.ProductItemId,
+                Quantity = cartReqModel.Quantity,
+                CreatedAt = DateTime.Now
+            };
+            await _cartRepositories.Insert(cart);
+        }
+
+        return new MessageResultModel()
+        {
+            Message = "Ok"
+        };
+    }
+
+    public async Task<MessageResultModel> UpdateCart(CartReqModel cartReqModel, string Token)
+    {
+        Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
+        var productItem = await _productItemRepositories.GetSingle(x => x.Id.Equals(cartReqModel.ProductItemId));
+        if (productItem == null)
+            throw new CustomException("Product Item not found");
+        if (productItem.Quantity < cartReqModel.Quantity)
+            throw new CustomException("Product Item in stock is not enough");
+        var cart = await _cartRepositories.GetSingle(x => x.ProductItemId.Equals(cartReqModel.ProductItemId) && x.UserId.Equals(UserId));
+        if (cart == null)
+        {
+            var newCart = new Cart()
+            {
+                Id = Guid.NewGuid(),
+                UserId = UserId,
+                ProductItemId = cartReqModel.ProductItemId,
+                Quantity = cartReqModel.Quantity,
+                CreatedAt = DateTime.Now
+            };
+            await _cartRepositories.Insert(newCart);
+        }
+        else
+        {
+            cart.Quantity = cartReqModel.Quantity;
+            cart.UpdatedAt = DateTime.Now;
+            await _cartRepositories.Update(cart);
+        }
+
+        return new MessageResultModel()
+        {
+            Message = "Ok"
+        };
+    }
+
+    public async Task<MessageResultModel> DeleteCart(Guid cartId, string Token)
+    {
+        Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
+        var Cart = await _cartRepositories.GetSingle(x => x.Id.Equals(cartId) && x.UserId.Equals(UserId));
+        if (Cart == null)
+            throw new CustomException("Cart not found");
+        await _cartRepositories.Delete(Cart);
+        return new MessageResultModel()
+        {
+            Message = "Ok"
+        };
     }
 }
