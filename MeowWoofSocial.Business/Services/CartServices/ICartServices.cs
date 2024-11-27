@@ -5,7 +5,8 @@ namespace MeowWoofSocial.Business.Services.CartServices;
 
 public interface ICartServices
 {
-    Task<List<CartResModel>> GetCart(string Token);
+    Task<ListDataResultModel<CartResModel>> GetCart(string Token);
     Task<MessageResultModel> AddToCart(CartReqModel cartReqModel , string Token);
     Task<MessageResultModel> UpdateCart(CartReqModel cartReqModel , string Token);
+    Task<MessageResultModel> DeleteCart(Guid cartId , string Token);
 }

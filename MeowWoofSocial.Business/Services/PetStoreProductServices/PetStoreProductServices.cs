@@ -247,7 +247,7 @@ public class PetStoreProductServices : IPetStoreProductServices
 
             var allPetStoreProducts = await _petStoreProductRepo.GetList(
                 x => x.Status.Equals(GeneralStatusEnums.Active.ToString()),
-                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails"
+                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails.Order"
             );
 
             allPetStoreProducts = allPetStoreProducts.OrderByDescending(p => p.CreateAt).ToList();
@@ -289,7 +289,7 @@ public class PetStoreProductServices : IPetStoreProductServices
                 Price = petStoreProduct.PetStoreProductItems.Select(x => x.Price).FirstOrDefault(),
                 TotalSales = petStoreProduct.PetStoreProductItems
                     .SelectMany(x => x.OrderDetails)
-                    .Where(od => od.Status.Equals(TransactionEnums.Success.ToString()))
+                    .Where(od => !od.Order.Status.Equals(OrderEnums.Pending.ToString()))
                     .Sum(od => od.Quantity)
             };
         }

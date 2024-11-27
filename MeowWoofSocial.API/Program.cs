@@ -153,8 +153,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigin", policy =>
     {
         policy
-            .WithOrigins("https://meowwoofsocial.com")
-            .WithOrigins("http://localhost:5173") // Chỉ định nguồn cụ thể
+            .WithOrigins("https://meowwoofsocial.com", "http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // Cho phép cookies, authorization headers, hoặc TLS client certificates

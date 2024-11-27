@@ -75,6 +75,10 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
+            entity.HasOne(d => d.Order).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.OrderId)
+                .HasConstraintName("Cart_Order_Id_fk");
+
             entity.HasOne(d => d.ProductItem).WithMany(p => p.Carts)
                 .HasForeignKey(d => d.ProductItemId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -138,15 +142,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("Order");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Price).HasColumnType("decimal(15, 3)");
-            entity.Property(e => e.RefId)
-                .HasMaxLength(10)
-                .IsUnicode(false);
             entity.Property(e => e.Status)
-                .HasMaxLength(50)
+                .HasMaxLength(30)
                 .IsUnicode(false);
-            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.UserAddress).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserAddressId)
@@ -555,19 +556,16 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("Transaction");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CassoRefId)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.CassoTransactionId)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.CreateAt).HasColumnType("datetime");
-            entity.Property(e => e.FinishTransactionAt).HasColumnType("datetime");
-            entity.Property(e => e.PaymentMethod)
-                .HasMaxLength(50)
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.FinishedTransactionAt).HasColumnType("datetime");
+            entity.Property(e => e.PaymentLinkId)
+                .HasMaxLength(300)
                 .IsUnicode(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.TransactionReference)
+                .HasMaxLength(300)
                 .IsUnicode(false);
 
             entity.HasOne(d => d.Order).WithMany(p => p.Transactions)
