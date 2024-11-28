@@ -26,8 +26,4 @@ public partial class PetStoreProduct
     public virtual ICollection<PetStoreProductAttachment> PetStoreProductAttachments { get; set; } = new List<PetStoreProductAttachment>();
 
     public virtual ICollection<PetStoreProductItem> PetStoreProductItems { get; set; } = new List<PetStoreProductItem>();
-
-    public virtual ICollection<PetStoreProductRating> PetStoreProductRatings { get; set; } = new List<PetStoreProductRating>();
-
-    public virtual ICollection<ProductRating> ProductRatings { get; set; } = new List<ProductRating>();
 }

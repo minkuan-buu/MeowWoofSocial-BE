@@ -9,13 +9,13 @@ public partial class PetStoreProductRating
 
     public Guid UserId { get; set; }
 
-    public Guid ProductId { get; set; }
+    public Guid ProductItemId { get; set; }
 
     public decimal Rating { get; set; }
 
     public string? Comment { get; set; }
 
-    public virtual PetStoreProduct Product { get; set; } = null!;
+    public virtual PetStoreProductItem ProductItem { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 }

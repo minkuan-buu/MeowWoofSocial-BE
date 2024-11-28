@@ -39,6 +39,8 @@ public partial class User
 
     public virtual ICollection<PetStoreProductRating> PetStoreProductRatings { get; set; } = new List<PetStoreProductRating>();
 
+    public virtual ICollection<PetStoreRating> PetStoreRatings { get; set; } = new List<PetStoreRating>();
+
     public virtual ICollection<PetStore> PetStores { get; set; } = new List<PetStore>();
 
     public virtual ICollection<PostReaction> PostReactions { get; set; } = new List<PostReaction>();
@@ -46,8 +48,6 @@ public partial class User
     public virtual ICollection<PostStored> PostStoreds { get; set; } = new List<PostStored>();
 
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
-
-    public virtual ICollection<ProductRating> ProductRatings { get; set; } = new List<ProductRating>();
 
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 

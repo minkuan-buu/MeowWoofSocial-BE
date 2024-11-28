@@ -7,7 +7,9 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MeowWoofSocial.Business.Services.RatingServices;
 using MeowWoofSocial.Data.DTO.Custom;
+using MeowWoofSocial.Data.Repositories.PetStoreProductRatingRepositories;
 using Microsoft.AspNetCore.Authorization;
 
 namespace MeowWoofSocial.API.Controllers
@@ -17,10 +19,12 @@ namespace MeowWoofSocial.API.Controllers
     public class OrderController : ControllerBase
     {
         private readonly ITransactionServices _transactionServices;
+        private readonly IRatingServices _ratingServices;
 
-        public OrderController(ITransactionServices transactionServices)
+        public OrderController(ITransactionServices transactionServices, IRatingServices ratingServices)
         {
             _transactionServices = transactionServices;
+            _ratingServices = ratingServices;
         }
 
         [HttpPost]
@@ -63,6 +67,22 @@ namespace MeowWoofSocial.API.Controllers
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _transactionServices.GetTrackingOrder(id, token);
+                return Ok(result);
+            }
+            catch (CustomException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        [HttpGet("rating/{id}")]
+        [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
+        public async Task<IActionResult> GetRatingOrder(Guid id)
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+                var result = await _ratingServices.GetOrderRatingPetStore(token, id);
                 return Ok(result);
             }
             catch (CustomException ex)
