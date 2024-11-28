@@ -475,6 +475,7 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                     var getTransaction = paymentLinkInformation.transactions.FirstOrDefault();
                     transaction.TransactionReference = getTransaction.reference;
                     transaction.FinishedTransactionAt = DateTime.Parse(getTransaction.transactionDateTime);
+                    orderResModel.StatusPayment = TransactionEnums.PAID.ToString();
                     transaction.Status = TransactionEnums.PAID.ToString();
                     transaction.Order.Status = OrderEnums.Delivering.ToString();
                     transaction.Order.UpdatedAt = DateTime.Now;
@@ -495,6 +496,7 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                     transaction.Status = TransactionEnums.CANCELLED.ToString();
                     transaction.Order.UpdatedAt = DateTime.Now;
                     transaction.Order.Status = OrderEnums.Cancelled.ToString();
+                    orderResModel.StatusPayment = TransactionEnums.CANCELLED.ToString();
                 }
 
                 await _transactionRepositories.Update(transaction);
