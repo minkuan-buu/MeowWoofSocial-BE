@@ -35,7 +35,7 @@ public partial class MeowWoofSocialContext : DbContext
 
     public virtual DbSet<PetStoreProductItem> PetStoreProductItems { get; set; }
 
-    public virtual DbSet<PetStoreRating> PetStoreRatings { get; set; }
+    public virtual DbSet<PetStoreProductRating> PetStoreProductRatings { get; set; }
 
     public virtual DbSet<Post> Posts { get; set; }
 
@@ -354,11 +354,11 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasConstraintName("FK__PetStoreP__Produ__7C4F7684");
         });
 
-        modelBuilder.Entity<PetStoreRating>(entity =>
+        modelBuilder.Entity<PetStoreProductRating>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC0752F752E7");
 
-            entity.ToTable("PetStoreRating");
+            entity.ToTable("PetStoreProductRating");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Comment)
@@ -366,12 +366,12 @@ public partial class MeowWoofSocialContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.Rating).HasColumnType("decimal(3, 1)");
 
-            entity.HasOne(d => d.PetStore).WithMany(p => p.PetStoreRatings)
-                .HasForeignKey(d => d.PetStoreId)
+            entity.HasOne(d => d.Product).WithMany(p => p.PetStoreProductRatings)
+                .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreR__PetSt__7E37BEF6");
+                .HasConstraintName("PetStoreProductRating___fk");
 
-            entity.HasOne(d => d.User).WithMany(p => p.PetStoreRatings)
+            entity.HasOne(d => d.User).WithMany(p => p.PetStoreProductRatings)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__PetStoreR__UserI__7D439ABD");
