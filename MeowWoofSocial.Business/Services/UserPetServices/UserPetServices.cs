@@ -115,5 +115,22 @@ namespace MeowWoofSocial.Business.Services.UserPetServices
             }
             return result;
         }
+        
+        public async Task<MessageResultModel> DeleteUserPet(Guid PetId , string Token)
+        {
+            Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
+            var userPet = await _userPetRepo.GetSingle(x => x.Id.Equals(PetId) && x.UserId.Equals(UserId));
+            if (userPet == null)
+                throw new CustomException("UserPet not found");
+            if (!string.IsNullOrEmpty(userPet.Attachment))
+            {
+                await _cloudStorage.DeleteFilesInPathAsync(userPet.Attachment);
+            }
+            await _userPetRepo.Delete(userPet);
+            return new MessageResultModel()
+            {
+                Message = "Ok"
+            };
+        }
     }
 }

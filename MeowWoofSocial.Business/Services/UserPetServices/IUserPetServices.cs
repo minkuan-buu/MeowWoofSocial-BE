@@ -9,4 +9,6 @@ public interface IUserPetServices
 
     Task<DataResultModel<UserPetUpdateResMdoel>> UpdateUserPet(UserPetUpdateReqMdoel userPetUpdateReq,
         string token);
+    
+    Task<MessageResultModel> DeleteUserPet(Guid PetId , string Token);
 }
