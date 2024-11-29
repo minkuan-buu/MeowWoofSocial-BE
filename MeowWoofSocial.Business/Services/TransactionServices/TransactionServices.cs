@@ -475,8 +475,10 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                     var getTransaction = paymentLinkInformation.transactions.FirstOrDefault();
                     transaction.TransactionReference = getTransaction.reference;
                     transaction.FinishedTransactionAt = DateTime.Parse(getTransaction.transactionDateTime);
+                    orderResModel.StatusPayment = TransactionEnums.PAID.ToString();
                     transaction.Status = TransactionEnums.PAID.ToString();
                     transaction.Order.Status = OrderEnums.Delivering.ToString();
+                    transaction.Order.UpdatedAt = DateTime.Now;
                     orderResModel.StatusPayment = TransactionEnums.PAID.ToString();
                     foreach (var orderDetail in transaction.Order.OrderDetails)
                     {
@@ -492,7 +494,9 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                 } else if (paymentLinkInformation.status.Equals(TransactionEnums.CANCELLED.ToString()))
                 {
                     transaction.Status = TransactionEnums.CANCELLED.ToString();
+                    transaction.Order.UpdatedAt = DateTime.Now;
                     transaction.Order.Status = OrderEnums.Cancelled.ToString();
+                    orderResModel.StatusPayment = TransactionEnums.CANCELLED.ToString();
                 }
 
                 await _transactionRepositories.Update(transaction);
@@ -552,6 +556,55 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
             }).ToList();
 
             return new ListDataResultModel<ListOrderResModel>() { Data = orderResModel };
+        }
+
+        public async Task<DataResultModel<ListOrderResModel>> GetTrackingOrder(Guid id, string token)
+        {
+            var userId = new Guid(Authentication.DecodeToken(token, "userid"));
+            
+            // Lấy đơn hàng từ repository với các thuộc tính liên quan
+            var order = await _orderRepositories.GetSingle(o => o.Id == id && o.UserId == userId && !o.Status.Equals(OrderEnums.Pending.ToString()), 
+                includeProperties: "OrderDetails.ProductItem.Product.PetStoreProductAttachments,OrderDetails.ProductItem.Product.PetStore,UserAddress");
+
+            if (order == null)
+            {
+                throw new CustomException("Order not found");
+            }
+
+            // Tạo OrderResModel và ánh xạ các thuộc tính
+            var orderResModel = new ListOrderResModel
+            {
+                Id = order.Id,
+                TotalPrice = order.Price,
+                Status = order.Status,
+                UserAddress = order.UserAddress != null ? new OrderUserAddress
+                {
+                    Id = order.UserAddress.Id,
+                    Name = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Name),
+                    Phone = order.UserAddress.Phone,
+                    Address = TextConvert.ConvertFromUnicodeEscape(order.UserAddress.Address),
+                    IsDefault = order.UserAddress.Status.Equals(UserAddressEnums.Default.ToString())
+                } : null,
+                PetStores = order.OrderDetails
+                    .GroupBy(detail => detail.ProductItem.Product.PetStore.Id) // Nhóm theo PetStore Id
+                    .Select(group => new OrderPetStore
+                    {
+                        Id = group.Key,
+                        Name = TextConvert.ConvertFromUnicodeEscape(group.First().ProductItem.Product.PetStore.Name),
+                        Phone = group.First().ProductItem.Product.PetStore.Phone,
+                        OrderDetails = group.Select(detail => new OrderDetailResModel
+                        {
+                            Id = detail.Id,
+                            Attachment = detail.ProductItem.Product.PetStoreProductAttachments.FirstOrDefault()?.Attachment ?? string.Empty,
+                            ProductName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Product.Name),
+                            ProductItemName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Name),
+                            Quantity = detail.Quantity,
+                            UnitPrice = detail.UnitPrice
+                        }).ToList()
+                    }).ToList()
+            };
+
+            return new DataResultModel<ListOrderResModel> { Data = orderResModel };
         }
     }
 }
