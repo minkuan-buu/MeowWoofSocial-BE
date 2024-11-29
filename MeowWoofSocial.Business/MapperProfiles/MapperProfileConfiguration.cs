@@ -402,6 +402,13 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
+            
+            CreateMap<UserPet, UserPetModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
         }
     }
 }

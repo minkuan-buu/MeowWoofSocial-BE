@@ -132,5 +132,22 @@ namespace MeowWoofSocial.Business.Services.UserPetServices
                 Message = "Ok"
             };
         }
+        
+        public async Task<ListDataResultModel<UserPetModel>> GetUserPetByUserID(Guid userId, string token)
+        {
+            var result = new ListDataResultModel<UserPetModel>();
+            try
+            {
+                Guid UserId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userPet = await _userPetRepo.GetList(x => x.UserId.Equals(UserId));
+                result.Data = _mapper.Map<List<UserPetModel>>(userPet);
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+        
     }
 }
