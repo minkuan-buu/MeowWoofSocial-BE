@@ -27,6 +27,8 @@ public partial class MeowWoofSocialContext : DbContext
 
     public virtual DbSet<PetCareBookingDetail> PetCareBookingDetails { get; set; }
 
+    public virtual DbSet<PetCareCategory> PetCareCategories { get; set; }
+
     public virtual DbSet<PetStore> PetStores { get; set; }
 
     public virtual DbSet<PetStoreProduct> PetStoreProducts { get; set; }
@@ -218,6 +220,11 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
 
+            entity.HasOne(d => d.PetCareCategory).WithMany(p => p.PetCareBookings)
+                .HasForeignKey(d => d.PetCareCategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("PetCareBooking___fk");
+
             entity.HasOne(d => d.PetStore).WithMany(p => p.PetCareBookings)
                 .HasForeignKey(d => d.PetStoreId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -255,6 +262,23 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasForeignKey(d => d.PetId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__PetCareBo__PetId__7B5B524B");
+        });
+
+        modelBuilder.Entity<PetCareCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__PetCareC__3214EC0757C705D7");
+
+            entity.ToTable("PetCareCategory");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Attachment)
+                .HasMaxLength(4000)
+                .IsUnicode(false);
+            entity.Property(e => e.Description).HasColumnType("text");
+            entity.Property(e => e.Name).HasColumnType("text");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<PetStore>(entity =>
@@ -364,6 +388,7 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Comment)
                 .HasMaxLength(1000)
                 .IsUnicode(false);
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Rating).HasColumnType("decimal(3, 1)");
 
             entity.HasOne(d => d.ProductItem).WithMany(p => p.PetStoreProductRatings)

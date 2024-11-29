@@ -386,7 +386,22 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
 
+            CreateMap<UserPetUpdateReqMdoel, UserPet>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Gender)))
+                .ForMember(dest => dest.Attachment, opt => opt.Ignore());
 
+            CreateMap<UserPet, UserPetUpdateResMdoel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
         }
     }
 }
