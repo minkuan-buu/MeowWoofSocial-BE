@@ -35,6 +35,8 @@ public partial class MeowWoofSocialContext : DbContext
 
     public virtual DbSet<PetStoreProductItem> PetStoreProductItems { get; set; }
 
+    public virtual DbSet<PetStoreProductRating> PetStoreProductRatings { get; set; }
+
     public virtual DbSet<PetStoreRating> PetStoreRatings { get; set; }
 
     public virtual DbSet<Post> Posts { get; set; }
@@ -46,8 +48,6 @@ public partial class MeowWoofSocialContext : DbContext
     public virtual DbSet<PostReaction> PostReactions { get; set; }
 
     public virtual DbSet<PostStored> PostStoreds { get; set; }
-
-    public virtual DbSet<ProductRating> ProductRatings { get; set; }
 
     public virtual DbSet<Report> Reports { get; set; }
 
@@ -74,6 +74,10 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.OrderId)
+                .HasConstraintName("Cart_Order_Id_fk");
 
             entity.HasOne(d => d.ProductItem).WithMany(p => p.Carts)
                 .HasForeignKey(d => d.ProductItemId)
@@ -138,15 +142,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("Order");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Price).HasColumnType("decimal(15, 3)");
-            entity.Property(e => e.RefId)
-                .HasMaxLength(10)
-                .IsUnicode(false);
             entity.Property(e => e.Status)
-                .HasMaxLength(50)
+                .HasMaxLength(30)
                 .IsUnicode(false);
-            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.UserAddress).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserAddressId)
@@ -353,9 +354,32 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasConstraintName("FK__PetStoreP__Produ__7C4F7684");
         });
 
-        modelBuilder.Entity<PetStoreRating>(entity =>
+        modelBuilder.Entity<PetStoreProductRating>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__PetStore__3214EC0752F752E7");
+
+            entity.ToTable("PetStoreProductRating");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Comment)
+                .HasMaxLength(1000)
+                .IsUnicode(false);
+            entity.Property(e => e.Rating).HasColumnType("decimal(3, 1)");
+
+            entity.HasOne(d => d.ProductItem).WithMany(p => p.PetStoreProductRatings)
+                .HasForeignKey(d => d.ProductItemId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("PetStoreProductRating___fk");
+
+            entity.HasOne(d => d.User).WithMany(p => p.PetStoreProductRatings)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PetStoreR__UserI__7D439ABD");
+        });
+
+        modelBuilder.Entity<PetStoreRating>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__ProductR__3214EC07D8E8D12B");
 
             entity.ToTable("PetStoreRating");
 
@@ -368,12 +392,12 @@ public partial class MeowWoofSocialContext : DbContext
             entity.HasOne(d => d.PetStore).WithMany(p => p.PetStoreRatings)
                 .HasForeignKey(d => d.PetStoreId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreR__PetSt__7E37BEF6");
+                .HasConstraintName("FK__ProductRa__PetStore__00200768");
 
             entity.HasOne(d => d.User).WithMany(p => p.PetStoreRatings)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PetStoreR__UserI__7D439ABD");
+                .HasConstraintName("FK__ProductRa__UserI__7F2BE32F");
         });
 
         modelBuilder.Entity<Post>(entity =>
@@ -492,29 +516,6 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasConstraintName("FK__PostStore__UserI__73BA3083");
         });
 
-        modelBuilder.Entity<ProductRating>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__ProductR__3214EC07D8E8D12B");
-
-            entity.ToTable("ProductRating");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Comment)
-                .HasMaxLength(1000)
-                .IsUnicode(false);
-            entity.Property(e => e.Rating).HasColumnType("decimal(3, 1)");
-
-            entity.HasOne(d => d.Product).WithMany(p => p.ProductRatings)
-                .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductRa__Produ__00200768");
-
-            entity.HasOne(d => d.User).WithMany(p => p.ProductRatings)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ProductRa__UserI__7F2BE32F");
-        });
-
         modelBuilder.Entity<Report>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Report__3214EC07ED1E5112");
@@ -555,19 +556,16 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("Transaction");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CassoRefId)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.CassoTransactionId)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.CreateAt).HasColumnType("datetime");
-            entity.Property(e => e.FinishTransactionAt).HasColumnType("datetime");
-            entity.Property(e => e.PaymentMethod)
-                .HasMaxLength(50)
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.FinishedTransactionAt).HasColumnType("datetime");
+            entity.Property(e => e.PaymentLinkId)
+                .HasMaxLength(300)
                 .IsUnicode(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.TransactionReference)
+                .HasMaxLength(300)
                 .IsUnicode(false);
 
             entity.HasOne(d => d.Order).WithMany(p => p.Transactions)

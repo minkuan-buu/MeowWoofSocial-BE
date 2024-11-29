@@ -32,7 +32,6 @@ using MeowWoofSocial.Data.Repositories.PetStoreProductRepositories;
 using MeowWoofSocial.Business.Services.TransactionServices;
 using MeowWoofSocial.Business.Services.PostReactionServices;
 using MeowWoofSocial.Data.Repositories.OrderRepositories;
-using MeowWoofSocial.Data.Repositories.ProductRatingRepositories;
 using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
 using MeowWoofSocial.Business.Services.UserAddressServices;
@@ -40,8 +39,10 @@ using MeowWoofSocial.Business.Services.UserPetServices;
 using MeowWoofSocial.Data.Repositories.UserPetRepositories;
 using MeowWoofSocial.Data.Repositories.IOTPRepositories;
 using MeowWoofSocial.Business.Services.OTPServices;
+using MeowWoofSocial.Business.Services.RatingServices;
 using MeowWoofSocial.Business.Ultilities.Email;
 using MeowWoofSocial.Data.Repositories.CartRepositories;
+using MeowWoofSocial.Data.Repositories.PetStoreProductRatingRepositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -126,12 +127,12 @@ builder.Services.AddScoped<IPetStoreProductAttachmentRepositories, PetStoreProdu
 builder.Services.AddScoped<IPetStoreProductItemRepositories, PetStoreProductItemRepositories>();
 builder.Services.AddScoped<IOrderRepositories, OrderRepositories>();
 builder.Services.AddScoped<IOrderDetailRepositories, OrderDetailRepositories>();
-builder.Services.AddScoped<IProductRatingRepositories, ProductRatingRepositories>();
 builder.Services.AddScoped<IUserAddressRepositories, UserAddressRepositories>();
 builder.Services.AddScoped<ITransactionRepositories, TransactionRepositories>();
 builder.Services.AddScoped<IUserPetRepositories, UserPetRepositories>();
 builder.Services.AddScoped<IOTPRepositories, OTPRepositories>();
 builder.Services.AddScoped<ICartRepositories, CartRepositories>();
+builder.Services.AddScoped<IPetStoreProductRatingRepositories, PetStoreProductRatingRepositories>();
 
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
@@ -146,6 +147,7 @@ builder.Services.AddScoped<IUserPetServices, UserPetServices>();
 builder.Services.AddScoped<IOTPServices, OTPServices>();
 builder.Services.AddScoped<ICartServices, CartServices>();
 builder.Services.AddScoped<IEmail, Email>();
+builder.Services.AddScoped<IRatingServices, RatingServices>();
 
 //=========================================== CORS ================================================
 builder.Services.AddCors(options =>
@@ -153,8 +155,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigin", policy =>
     {
         policy
-            .WithOrigins("https://meowwoofsocial.com")
-            .WithOrigins("http://localhost:5173") // Chỉ định nguồn cụ thể
+            .WithOrigins("https://meowwoofsocial.com", "http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // Cho phép cookies, authorization headers, hoặc TLS client certificates

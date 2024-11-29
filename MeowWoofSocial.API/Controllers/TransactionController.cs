@@ -24,14 +24,14 @@ namespace MeowWoofSocial.API.Controllers
             _transactionServices = transactionServices;
         }
 
-        [HttpPost("cancel")]
+        [HttpPost("handle-check")]
         [Authorize(AuthenticationSchemes = "MeowWoofAuthentication")]
-        public async Task<IActionResult> CancelTransaction([FromBody] Guid request)
+        public async Task<IActionResult> CheckTransaction([FromBody] string PaymentLinkId)
         {
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-                var result = await _transactionServices.CancelTransaction(request, token);
+                var result = await _transactionServices.HandleCheckTransaction(PaymentLinkId, token);
                 return Ok(result);
             }
             catch (CustomException ex)

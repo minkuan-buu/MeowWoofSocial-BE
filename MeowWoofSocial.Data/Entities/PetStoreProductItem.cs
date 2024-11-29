@@ -21,5 +21,7 @@ public partial class PetStoreProductItem
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
+    public virtual ICollection<PetStoreProductRating> PetStoreProductRatings { get; set; } = new List<PetStoreProductRating>();
+
     public virtual PetStoreProduct Product { get; set; } = null!;
 }

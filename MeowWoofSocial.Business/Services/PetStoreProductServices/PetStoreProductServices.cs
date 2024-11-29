@@ -8,9 +8,9 @@ using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.PetStoreProductAttachmentRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
+using MeowWoofSocial.Data.Repositories.PetStoreProductRatingRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreRepositories;
-using MeowWoofSocial.Data.Repositories.ProductRatingRepositories;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
 
 
@@ -25,9 +25,9 @@ public class PetStoreProductServices : IPetStoreProductServices
     private readonly ICloudStorage _cloudStorage;
     private readonly IPetStoreProductItemRepositories _petStoreProductItemRepo;
     private readonly IPetStoreRepositories _petStoreRepo;
-    private readonly IProductRatingRepositories _productRatingRepo;
+    private readonly IPetStoreProductRatingRepositories _productRatingRepo;
     
-    public PetStoreProductServices(IMapper mapper, IPetStoreProductRepositories petStoreProductRepositories, IUserRepositories userRepositories, IPetStoreProductAttachmentRepositories petStoreProductAttachmentRepo, ICloudStorage cloudStorage, IPetStoreProductItemRepositories petStoreProductItemRepo, IPetStoreRepositories petStoreRepo, IProductRatingRepositories productRatingRepo)
+    public PetStoreProductServices(IMapper mapper, IPetStoreProductRepositories petStoreProductRepositories, IUserRepositories userRepositories, IPetStoreProductAttachmentRepositories petStoreProductAttachmentRepo, ICloudStorage cloudStorage, IPetStoreProductItemRepositories petStoreProductItemRepo, IPetStoreRepositories petStoreRepo, IPetStoreProductRatingRepositories productRatingRepo)
     {
         _mapper = mapper;
         _petStoreProductRepo = petStoreProductRepositories;
@@ -217,7 +217,7 @@ public class PetStoreProductServices : IPetStoreProductServices
             
             await _cloudStorage.DeleteFilesInPathAsync($"petstoreproduct/{petStoreProduct.Id}");
             await _petStoreProductAttachmentRepo.DeleteRange(petStoreProduct.PetStoreProductAttachments);
-            await _productRatingRepo.DeleteRange(petStoreProduct.ProductRatings);
+            await _productRatingRepo.DeleteRange(petStoreProduct.PetStoreProductItems.SelectMany(x => x.PetStoreProductRatings));
             await _petStoreProductItemRepo.DeleteRange(petStoreProduct.PetStoreProductItems);
             await _petStoreProductRepo.Delete(petStoreProduct);
 
@@ -247,7 +247,7 @@ public class PetStoreProductServices : IPetStoreProductServices
 
             var allPetStoreProducts = await _petStoreProductRepo.GetList(
                 x => x.Status.Equals(GeneralStatusEnums.Active.ToString()),
-                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails"
+                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails.Order"
             );
 
             allPetStoreProducts = allPetStoreProducts.OrderByDescending(p => p.CreateAt).ToList();
@@ -289,7 +289,7 @@ public class PetStoreProductServices : IPetStoreProductServices
                 Price = petStoreProduct.PetStoreProductItems.Select(x => x.Price).FirstOrDefault(),
                 TotalSales = petStoreProduct.PetStoreProductItems
                     .SelectMany(x => x.OrderDetails)
-                    .Where(od => od.Status.Equals(TransactionEnums.Success.ToString()))
+                    .Where(od => !od.Order.Status.Equals(OrderEnums.Pending.ToString()))
                     .Sum(od => od.Quantity)
             };
         }

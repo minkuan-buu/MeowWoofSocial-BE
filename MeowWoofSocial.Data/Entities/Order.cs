@@ -9,17 +9,17 @@ public partial class Order
 
     public Guid UserId { get; set; }
 
+    public Guid? UserAddressId { get; set; }
+
     public decimal Price { get; set; }
 
     public string Status { get; set; } = null!;
 
-    public DateTime CreateAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdateAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
-    public string RefId { get; set; } = null!;
-
-    public Guid? UserAddressId { get; set; }
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
