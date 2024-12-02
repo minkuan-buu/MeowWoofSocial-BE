@@ -23,13 +23,16 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
         private readonly IUserRepositories _userRepo;
         private readonly IPetStoreRepositories _petStoreRepositories;
 
-        public PetStoreServices(IUserRepositories userRepositories, IMapper mapper, IPetStoreRepositories petStoreRepositories)
+        public PetStoreServices(IUserRepositories userRepositories, IMapper mapper,
+            IPetStoreRepositories petStoreRepositories)
         {
             _userRepo = userRepositories;
             _petStoreRepositories = petStoreRepositories;
             _mapper = mapper;
         }
-        public async Task<DataResultModel<PetStoreCreateResModel>> CreatePetStore(PetStoreCreateReqModel petStore, string token)
+
+        public async Task<DataResultModel<PetStoreCreateResModel>> CreatePetStore(PetStoreCreateReqModel petStore,
+            string token)
         {
             var result = new DataResultModel<PetStoreCreateResModel>();
             try
@@ -41,7 +44,7 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
                 {
                     throw new CustomException("You are banned from creating pet store due to violate of terms!");
                 }
-                
+
                 var existingPetStore = await _petStoreRepositories.GetSingle(x => x.UserId == userId);
                 if (existingPetStore != null)
                 {
@@ -66,24 +69,29 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
             {
                 throw new CustomException($"An error occurred: {ex.Message}");
             }
+
             return result;
         }
-        
-        public async Task<DataResultModel<PetStoreUpdateResModel>> UpdatePetStore(PetStoreUpdateReqModel petStoreUpdateReq, string token)
+
+        public async Task<DataResultModel<PetStoreUpdateResModel>> UpdatePetStore(
+            PetStoreUpdateReqModel petStoreUpdateReq, string token)
         {
             var result = new DataResultModel<PetStoreUpdateResModel>();
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var petStores = await _petStoreRepositories.GetSingle(x => x.Id == petStoreUpdateReq.Id && x.UserId == userId);
+                var petStores =
+                    await _petStoreRepositories.GetSingle(x => x.Id == petStoreUpdateReq.Id && x.UserId == userId);
 
                 if (petStoreUpdateReq == null)
                 {
-                    throw new CustomException("PetStore not found or you do not have permission to update this Pet Store");
+                    throw new CustomException(
+                        "PetStore not found or you do not have permission to update this Pet Store");
                 }
-                
+
                 petStores.Name = TextConvert.ConvertToUnicodeEscape(petStoreUpdateReq.Name ?? string.Empty);
-                petStores.Description = TextConvert.ConvertToUnicodeEscape(petStoreUpdateReq.Description ?? string.Empty);
+                petStores.Description =
+                    TextConvert.ConvertToUnicodeEscape(petStoreUpdateReq.Description ?? string.Empty);
                 petStores.Email = petStoreUpdateReq.Email;
                 petStores.Phone = petStoreUpdateReq.Phone;
                 petStores.Status = GeneralStatusEnums.Active.ToString();
@@ -91,7 +99,8 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
 
                 await _petStoreRepositories.Update(petStores);
 
-                var updatedPetStore = await _petStoreRepositories.GetSingle(x => x.Id == petStoreUpdateReq.Id, includeProperties: "User");
+                var updatedPetStore =
+                    await _petStoreRepositories.GetSingle(x => x.Id == petStoreUpdateReq.Id, includeProperties: "User");
 
                 result.Data = _mapper.Map<PetStoreUpdateResModel>(updatedPetStore);
 
@@ -100,10 +109,12 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
             {
                 throw new CustomException($"An error occurred: {ex.Message}");
             }
+
             return result;
         }
-        
-        public async Task<DataResultModel<PetStoreDeleteResModel>> DeletePetStore(PetStoreDeleteReqModel PetStoreDeleteReq, string token)
+
+        public async Task<DataResultModel<PetStoreDeleteResModel>> DeletePetStore(
+            PetStoreDeleteReqModel PetStoreDeleteReq, string token)
         {
             try
             {
@@ -125,7 +136,7 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
                 throw new CustomException($"Error deleting PetStore: {ex.Message}");
             }
         }
-        
+
         public async Task<DataResultModel<PetStoreCreateResModel>> GetPetStoreByID(Guid petStoreId, string token)
         {
             try
@@ -154,5 +165,23 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
                 throw new CustomException($"Error fetching Pet Store by ID: {ex.Message}");
             }
         }
+
+        public async Task<ListDataResultModel<PetStoreServiceResModel>> GetPetStoreService(string Type)
+        {
+            var petStoreServices = await _petStoreRepositories.GetList(
+                x => x.TypeStore == Type && x.Status == GeneralStatusEnums.Active.ToString(),
+                includeProperties: "PetStoreRatings");
+            var result = petStoreServices.Select(x => new PetStoreServiceResModel()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Description = x.Description,
+                Attachment = x.Attachment ?? string.Empty,
+                Type = x.TypeStore,
+                AverageRating = x.PetStoreRatings.Count == 0 ? 0 : x.PetStoreRatings.Sum(y => y.Rating) / x.PetStoreRatings.Count
+            }).ToList();
+            return new ListDataResultModel<PetStoreServiceResModel> { Data = result };
+        }
     }
 }
+
