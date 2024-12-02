@@ -26,7 +26,11 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
             public string Phone { get; set; } = null!;
 
             public string Status { get; set; } = null!;
-
+            
+            public string TypeStore { get; set; } = null!;
+            
+            public string? Attachment { get; set; }
+            
             public DateTime CreateAt { get; set; }
     }
     
