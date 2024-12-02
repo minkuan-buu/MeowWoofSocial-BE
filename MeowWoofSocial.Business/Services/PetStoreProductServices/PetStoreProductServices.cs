@@ -247,10 +247,19 @@ public class PetStoreProductServices : IPetStoreProductServices
 
             var allPetStoreProducts = await _petStoreProductRepo.GetList(
                 x => x.Status.Equals(GeneralStatusEnums.Active.ToString()),
-                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails.Order"
+                includeProperties: "PetStoreProductAttachments,PetStoreProductItems,PetStoreProductItems.OrderDetails.Order,Category"
             );
 
             allPetStoreProducts = allPetStoreProducts.OrderByDescending(p => p.CreateAt).ToList();
+            
+            if (petStoreProductReq.Keyword != null)
+            {
+                var keyword = TextConvert.ConvertToUnicodeEscape(petStoreProductReq.Keyword);
+                allPetStoreProducts = allPetStoreProducts
+                    .Where(p => p.Name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                p.PetStoreProductItems.Any(x => x.Name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0))
+                    .ToList();
+            }
 
             if (lastPetStoreProductCreateAt.HasValue)
             {
@@ -258,6 +267,21 @@ public class PetStoreProductServices : IPetStoreProductServices
                     .Where(p => p.CreateAt < lastPetStoreProductCreateAt.Value)
                     .ToList();
             }
+            
+            if (petStoreProductReq.Category.HasValue && petStoreProductReq.SubCategory.HasValue)
+            {
+                allPetStoreProducts = allPetStoreProducts
+                    .Where(p => p.CategoryId == petStoreProductReq.SubCategory.Value &&
+                                p.Category.ParentCategoryId == petStoreProductReq.Category.Value)
+                    .ToList();
+            }
+            else if (petStoreProductReq.Category.HasValue)
+            {
+                allPetStoreProducts = allPetStoreProducts
+                    .Where(p => p.Category.ParentCategoryId == petStoreProductReq.Category.Value)
+                    .ToList();
+            }
+
 
             allPetStoreProducts = allPetStoreProducts
                 .Where(p => p.Status.Equals(GeneralStatusEnums.Active.ToString()))
