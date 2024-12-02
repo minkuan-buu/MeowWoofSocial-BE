@@ -74,6 +74,8 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
 
         public string Name { get; set; } = null!;
         
+        public int TotalSales { get; set; }
+        
         public PetStoreAuthorResModel Author { get; set; } = null!;
         
         public List<PetStoreProductAttachmentResModel> Attachments { get; set; } = new();

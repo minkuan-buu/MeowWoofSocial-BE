@@ -272,6 +272,11 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     Name = TextConvert.ConvertFromUnicodeEscape(src.PetStore.Name),
                     Description = TextConvert.ConvertFromUnicodeEscape(src.PetStore.Description)
                 }))
+                .ForMember(dest => dest.TotalSales, opt => opt.MapFrom(src => src.PetStoreProductItems.Sum(item => 
+                        item.OrderDetails
+                            .Where(o => o.Order.Status != OrderEnums.Pending.ToString() && o.Order.Status != OrderEnums.Cancelled.ToString())
+                            .Sum(o => o.Quantity)
+                )))
                 .ForMember(dest => dest.PetStoreProductItems, opt => opt.MapFrom(src => src.PetStoreProductItems
                     .Select(x => new PetStoreProductItems()
                     {

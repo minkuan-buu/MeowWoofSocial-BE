@@ -15,6 +15,8 @@ public partial class PetStoreProductRating
 
     public string? Comment { get; set; }
 
+    public DateTime CreatedAt { get; set; }
+
     public virtual PetStoreProductItem ProductItem { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
