@@ -289,6 +289,9 @@ public partial class MeowWoofSocialContext : DbContext
             entity.ToTable("PetStore");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Attachment)
+                .HasMaxLength(1000)
+                .IsUnicode(false);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Description)
                 .HasMaxLength(5000)

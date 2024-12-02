@@ -151,4 +151,14 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         
         public int TotalSales { get; set; }
     }
+
+    public class PetStoreServiceResModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public string Type { get; set; } = null!;
+        public string Attachment { get; set; } = null!;
+        public decimal AverageRating { get; set; }
+    }
 }

@@ -25,6 +25,8 @@ public partial class PetStore
 
     public string TypeStore { get; set; } = null!;
 
+    public string? Attachment { get; set; }
+
     public virtual ICollection<PetCareBooking> PetCareBookings { get; set; } = new List<PetCareBooking>();
 
     public virtual ICollection<PetStoreProduct> PetStoreProducts { get; set; } = new List<PetStoreProduct>();
