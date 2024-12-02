@@ -19,7 +19,9 @@ using MeowWoofSocial.Data.Repositories.PetStoreProductItemRepositories;
 using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserAddressRepositories;
 using AutoMapper;
+using MeowWoofSocial.Data.Repositories;
 using MeowWoofSocial.Data.Repositories.CartRepositories;
+using MeowWoofSocial.Data.Repositories.PetCareBookingRepositories;
 using Net.payOS;
 using Net.payOS.Types;
 using ItemData = Net.payOS.Types.ItemData;
@@ -39,14 +41,16 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
         private readonly ITransactionRepositories _transactionRepositories;
         private readonly IPetStoreProductItemRepositories _petStoreProductItemRepositories;
         private readonly ICartRepositories _cartRepositories;
+        private readonly IPetCareBookingRepositories _petCareBookingRepositories;
         private PayOS _payOS;
         private const string MEMO_PREFIX = "DH"; // Prefix for order ID
 
-        public TransactionServices(IHubContext<TransactionHub> transactionHub, ILogger<TransactionServices> logger, IOrderRepositories orderRepositories, IPetStoreProductItemRepositories petStoreProductItemRepositories, IOrderDetailRepositories orderDetailRepositories, IUserAddressRepositories userAddressRepositories, ITransactionRepositories transactionRepositories, IMapper mapper, ICartRepositories cartRepositories)
+        public TransactionServices(IHubContext<TransactionHub> transactionHub, ILogger<TransactionServices> logger, IOrderRepositories orderRepositories, IPetStoreProductItemRepositories petStoreProductItemRepositories, IOrderDetailRepositories orderDetailRepositories, IUserAddressRepositories userAddressRepositories, ITransactionRepositories transactionRepositories, IMapper mapper, ICartRepositories cartRepositories, IPetCareBookingRepositories petCareBookingRepositories)
         {
             _payOS = new PayOS("421fdf87-bbe1-4694-a76c-17627d705a85", "7a2f58da-4003-4349-9e4b-f6bbfc556c9b", "da759facf68f863e0ed11385d3bf9cf24f35e2b171d1fa8bae8d91ce1db9ff0c");
             _mapper = mapper;
             _transactionRepositories = transactionRepositories;
+            _petCareBookingRepositories = petCareBookingRepositories;
             _userAddressRepositories = userAddressRepositories;
             _orderDetailRepositories = orderDetailRepositories;
             _petStoreProductItemRepositories = petStoreProductItemRepositories;
@@ -419,7 +423,7 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
             {
                 var userId = new Guid(Authentication.DecodeToken(token, "userid"));
         
-                var transaction = await _transactionRepositories.GetSingle(x => x.PaymentLinkId.Equals(id) && x.Status.Equals(TransactionEnums.PENDING.ToString()), includeProperties: "Order.OrderDetails.ProductItem.Product.PetStoreProductAttachments,Order.OrderDetails.ProductItem.Product.PetStore,Order.UserAddress");
+                var transaction = await _transactionRepositories.GetSingle(x => x.PaymentLinkId.Equals(id) && x.Status.Equals(TransactionEnums.PENDING.ToString()), includeProperties: "Order.OrderDetails.ProductItem.Product.PetStoreProductAttachments,Order.PetCareBookings.PetStore,Order.PetCareBookings.PetCareBookingDetails.Pet,Order.OrderDetails.ProductItem.Product.PetStore,Order.UserAddress");
 
                 if (transaction.Order == null)
                 {
@@ -430,38 +434,76 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                 {
                     throw new CustomException("Transaction not found");
                 }
-                
-                var orderResModel = new OrderPaymentResModel()
+
+                var orderResModel = new OrderPaymentResModel();
+                if (transaction.Order.PetCareBookings.FirstOrDefault(x =>
+                        x.UserId == userId && x.Status.Equals(OrderEnums.Pending.ToString())) != null)
                 {
-                    Id = transaction.Order.Id,
-                    TotalPrice = transaction.Order.Price,
-                    StatusPayment = transaction.Status,
-                    UserAddress = transaction.Order.UserAddress != null ? new OrderUserAddress
+                    orderResModel = new OrderPaymentResModel()
                     {
-                        Id = transaction.Order.UserAddress.Id,
-                        Name = TextConvert.ConvertFromUnicodeEscape(transaction.Order.UserAddress.Name),
-                        Phone = transaction.Order.UserAddress.Phone,
-                        Address = TextConvert.ConvertFromUnicodeEscape(transaction.Order.UserAddress.Address),
-                        IsDefault = transaction.Order.UserAddress.Status.Equals(UserAddressEnums.Default.ToString())
-                    } : null,
-                    PetStores = transaction.Order.OrderDetails
-                        .GroupBy(detail => detail.ProductItem.Product.PetStore.Id) // Nhóm theo PetStore Id
-                        .Select(group => new OrderPetStore
+                        Id = transaction.Order.Id,
+                        TotalPrice = transaction.Order.Price,
+                        StatusPayment = transaction.Status,
+                        UserAddress = transaction.Order.UserAddress != null ? new OrderUserAddress
                         {
-                            Id = group.Key,
-                            Name = TextConvert.ConvertFromUnicodeEscape(group.First().ProductItem.Product.PetStore.Name),
-                            Phone = group.First().ProductItem.Product.PetStore.Phone,
-                            OrderDetails = group.Select(detail => new OrderDetailResModel
+                            Id = transaction.Order.UserAddress.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(transaction.Order.UserAddress.Name),
+                            Phone = transaction.Order.UserAddress.Phone,
+                            Address = TextConvert.ConvertFromUnicodeEscape(transaction.Order.UserAddress.Address),
+                            IsDefault = transaction.Order.UserAddress.Status.Equals(UserAddressEnums.Default.ToString())
+                        } : null,
+                        PetStores = transaction.Order.PetCareBookings.Select(x => new OrderPetStore()
+                        {
+                            Id = x.PetStore.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(x.PetStore.Name),
+                            Phone = x.PetStore.Phone,
+                            OrderDetails = x.PetCareBookingDetails.Select(detail => new OrderDetailResModel
                             {
                                 Id = detail.Id,
-                                Attachment = detail.ProductItem.Product.PetStoreProductAttachments.FirstOrDefault()?.Attachment ?? string.Empty,
-                                ProductName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Product.Name),
-                                ProductItemName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Name),
-                                Quantity = detail.Quantity,
-                                UnitPrice = detail.UnitPrice
+                                Attachment = "https://cdn-icons-png.flaticon.com/512/3028/3028549.png",
+                                ProductName = $"Booking {TextConvert.ConvertFromUnicodeEscape(x.PetStore.Name)}",
+                                ProductItemName = TextConvert.ConvertFromUnicodeEscape(detail.Pet.Name),
+                                Quantity = 1,
+                                UnitPrice = 200000
                             }).ToList()
                         }).ToList()
-                };
+                    };
+                }
+                else
+                {
+                    orderResModel = new OrderPaymentResModel()
+                    {
+                        Id = transaction.Order.Id,
+                        TotalPrice = transaction.Order.Price,
+                        StatusPayment = transaction.Status,
+                        UserAddress = transaction.Order.UserAddress != null ? new OrderUserAddress
+                        {
+                            Id = transaction.Order.UserAddress.Id,
+                            Name = TextConvert.ConvertFromUnicodeEscape(transaction.Order.UserAddress.Name),
+                            Phone = transaction.Order.UserAddress.Phone,
+                            Address = TextConvert.ConvertFromUnicodeEscape(transaction.Order.UserAddress.Address),
+                            IsDefault = transaction.Order.UserAddress.Status.Equals(UserAddressEnums.Default.ToString())
+                        } : null,
+                        PetStores = transaction.Order.OrderDetails
+                            .GroupBy(detail => detail.ProductItem.Product.PetStore.Id) // Nhóm theo PetStore Id
+                            .Select(group => new OrderPetStore
+                            {
+                                Id = group.Key,
+                                Name = TextConvert.ConvertFromUnicodeEscape(group.First().ProductItem.Product.PetStore.Name),
+                                Phone = group.First().ProductItem.Product.PetStore.Phone,
+                                OrderDetails = group.Select(detail => new OrderDetailResModel
+                                {
+                                    Id = detail.Id,
+                                    Attachment = detail.ProductItem.Product.PetStoreProductAttachments.FirstOrDefault()?.Attachment ?? string.Empty,
+                                    ProductName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Product.Name),
+                                    ProductItemName = TextConvert.ConvertFromUnicodeEscape(detail.ProductItem.Name),
+                                    Quantity = detail.Quantity,
+                                    UnitPrice = detail.UnitPrice
+                                }).ToList()
+                            }).ToList()
+                    };
+                }
+                
                 
                 PaymentLinkInformation paymentLinkInformation = await _payOS.getPaymentLinkInformation(transaction.OrderPaymentRefId);
 
@@ -472,6 +514,12 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
 
                 if (paymentLinkInformation.status.Equals(TransactionEnums.PAID.ToString()))
                 {
+                    if (transaction.Order.PetCareBookings.FirstOrDefault(x => x.UserId == userId && x.Status.Equals(OrderEnums.Pending.ToString())) != null)
+                    {
+                        var petCareBooking = transaction.Order.PetCareBookings.FirstOrDefault(x => x.UserId == userId && x.Status.Equals(OrderEnums.Pending.ToString()));
+                        petCareBooking.Status = OrderEnums.Success.ToString();
+                        await _petCareBookingRepositories.Update(petCareBooking);
+                    }
                     var getTransaction = paymentLinkInformation.transactions.FirstOrDefault();
                     transaction.TransactionReference = getTransaction.reference;
                     transaction.FinishedTransactionAt = DateTime.Parse(getTransaction.transactionDateTime);
@@ -493,6 +541,12 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
                     await _cartRepositories.DeleteRange(CartItems);
                 } else if (paymentLinkInformation.status.Equals(TransactionEnums.CANCELLED.ToString()))
                 {
+                    if (transaction.Order.PetCareBookings.FirstOrDefault(x => x.UserId == userId && x.Status.Equals(OrderEnums.Pending.ToString())) != null)
+                    {
+                        var petCareBooking = transaction.Order.PetCareBookings.FirstOrDefault(x => x.UserId == userId && x.Status.Equals(OrderEnums.Pending.ToString()));
+                        petCareBooking.Status = OrderEnums.Cancelled.ToString();
+                        await _petCareBookingRepositories.Update(petCareBooking);
+                    }
                     transaction.Status = TransactionEnums.CANCELLED.ToString();
                     transaction.Order.UpdatedAt = DateTime.Now;
                     transaction.Order.Status = OrderEnums.Cancelled.ToString();

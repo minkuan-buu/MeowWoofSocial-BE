@@ -220,6 +220,11 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
 
+            entity.HasOne(d => d.Order).WithMany(p => p.PetCareBookings)
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("PetCareBooking___fk_2");
+
             entity.HasOne(d => d.PetCareCategory).WithMany(p => p.PetCareBookings)
                 .HasForeignKey(d => d.PetCareCategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
