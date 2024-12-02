@@ -73,5 +73,12 @@ namespace MeowWoofSocial.API.Controllers
             var result = await _petStoreServices.GetPetStoreByID(id, token);
             return Ok(result);
         }
+        
+        [HttpGet("services")]
+        public async Task<IActionResult> GetPetStoreService([FromQuery] string Type)
+        {
+            var result = await _petStoreServices.GetPetStoreService(Type);
+            return Ok(result);
+        }
     }
 }
