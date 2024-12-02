@@ -272,6 +272,11 @@ namespace MeowWoofSocial.Business.MapperProfiles
                     Name = TextConvert.ConvertFromUnicodeEscape(src.PetStore.Name),
                     Description = TextConvert.ConvertFromUnicodeEscape(src.PetStore.Description)
                 }))
+                .ForMember(dest => dest.TotalSales, opt => opt.MapFrom(src => src.PetStoreProductItems.Sum(item => 
+                        item.OrderDetails
+                            .Where(o => o.Order.Status != OrderEnums.Pending.ToString() && o.Order.Status != OrderEnums.Cancelled.ToString())
+                            .Sum(o => o.Quantity)
+                )))
                 .ForMember(dest => dest.PetStoreProductItems, opt => opt.MapFrom(src => src.PetStoreProductItems
                     .Select(x => new PetStoreProductItems()
                     {
@@ -370,7 +375,69 @@ namespace MeowWoofSocial.Business.MapperProfiles
             CreateMap<UserAddressDeleteReqModel, UserAddress>();
 
             CreateMap<UserAddress, UserAddressDeleteResModel>();
+            
+            CreateMap<UserPetCreateReqMdoel, UserPet>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Gender)))
+                .ForMember(dest => dest.Attachment, opt => opt.Ignore());
 
-        }
+            CreateMap<UserPet, UserPetCreateResMdoel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
+
+            CreateMap<UserPetUpdateReqMdoel, UserPet>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertToUnicodeEscape(src.Gender)))
+                .ForMember(dest => dest.Attachment, opt => opt.Ignore());
+
+            CreateMap<UserPet, UserPetUpdateResMdoel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
+            
+            CreateMap<UserPet, UserPetModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Name)))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Type)))
+                .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
+            
+            CreateMap<PetCareBookingCreateReqModel, PetCareBooking>()
+                .ForMember(dest => dest.PetStoreId, opt => opt.MapFrom(src => src.PetStoreId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.PetCareCategoryId, opt => opt.MapFrom(src => src.PetCareCategoryId))
+                .ForMember(dest => dest.PetCareBookingDetails, opt => opt.Ignore());
+
+            CreateMap<PetCareBooking, PetCareBookingCreateResModel>()
+                .ForMember(dest => dest.PetStoreId, opt => opt.MapFrom(src => src.PetStoreId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest=> dest.CreateAt, opt => opt.MapFrom(src => src.CreateAt))
+                .ForMember(dest => dest.PetCareCategoryId, opt => opt.MapFrom(src => src.PetCareCategoryId))
+                .ForMember(dest => dest.PetCareBookingDetails, opt => opt.MapFrom(src => src.PetCareBookingDetails
+                    .Select(x => new PetCareBookingDetailCreateResModel()
+                    {
+                        Id = x.Id,
+                        BookingId = x.BookingId,
+                        PetId = x.PetId,
+                        TypeTakeCare = TextConvert.ConvertFromUnicodeEscape(x.TypeTakeCare),
+                        TypeOfDisease = TextConvert.ConvertFromUnicodeEscape(x.TypeOfDisease),
+                        Status = x.Status,
+                        BookingDate = x.BookingDate
+                    }).ToList()));
+        } 
     }
 }

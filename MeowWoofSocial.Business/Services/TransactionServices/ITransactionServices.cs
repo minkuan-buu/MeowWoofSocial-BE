@@ -10,11 +10,13 @@ namespace MeowWoofSocial.Business.Services.TransactionServices
 {
     public interface ITransactionServices
     {
-        public Task<MessageResultModel> HandleTransactions(TransactionResponseDto transactions);
+        // public Task<MessageResultModel> HandleTransactions(TransactionResponseDto transactions);
+        public Task<String> CreatePaymentUrl(string Token, Guid Id);
         public Task<DataResultModel<OrderCreateResModel>> CreateOrder(List<OrderDetailCreateReqModel> request, string token);
         public Task<DataResultModel<OrderResModel>> GetOrder(Guid id, string token);
-        public Task<DataResultModel<TransactionPendingResModel>> CheckRefId(int refId, string token);
+        public Task<DataResultModel<ListOrderResModel>> GetTrackingOrder(Guid id, string token);
+        public Task<ListDataResultModel<ListOrderResModel>> GetOrderList(string token);
         public Task<DataResultModel<UserAddressCreateResModel>> ChangeOrderAddress(Guid orderId, Guid addressId,  string token);
-        public Task<MessageResultModel> CancelTransaction(Guid id, string token);
+        public Task<DataResultModel<OrderPaymentResModel>> HandleCheckTransaction(string id, string token);
     }
 }

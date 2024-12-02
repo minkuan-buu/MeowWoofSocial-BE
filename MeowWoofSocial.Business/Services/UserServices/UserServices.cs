@@ -8,6 +8,8 @@ using MeowWoofSocial.Data.Entities;
 using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using MeowWoofSocial.Business.Services.CloudServices;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace MeowWoofSocial.Business.Services.UserServices
 {
@@ -37,6 +39,11 @@ namespace MeowWoofSocial.Business.Services.UserServices
             if (!checkPassword)
             {
                 throw new CustomException("Wrong Password!");
+            }
+            if (user.Status.Equals(AccountStatusEnums.ResetPassword.ToString()))
+            {
+                user.Status = AccountStatusEnums.Active.ToString();
+                await _userRepositories.Update(user);
             }
             UserLoginResModel ResUser = _mapper.Map<UserLoginResModel>(user);
             ResUser.Token = Authentication.GenerateJWT(user);
@@ -154,7 +161,7 @@ namespace MeowWoofSocial.Business.Services.UserServices
             try
             {
                 Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
-                var userProfile = await _userRepositories.GetSingle(x => x.Id == profileUpdateReq.Id && x.Id == userId);
+                var userProfile = await _userRepositories.GetSingle(x => x.Id.Equals(userId));
 
                 if (userProfile == null || userProfile.Status.Equals(AccountStatusEnums.Inactive))
                 {
@@ -178,6 +185,40 @@ namespace MeowWoofSocial.Business.Services.UserServices
             }
 
             return result;
+        }
+
+        public async Task<MessageResultModel> ResetPassword(UserResetPasswordReqModel ReqModel, string token)
+        {
+            try
+            {
+                var email = Authentication.DecodeToken(token, "email");
+                var user = await _userRepositories.GetSingle(x => x.Email.Equals(email));
+                if (user == null)
+                {
+                    throw new CustomException("User not found!");
+                }
+                if (ReqModel.NewPassword != ReqModel.ConfirmPassword)
+                {
+                    throw new CustomException("New password and confirm password is not match!");
+                }
+                if (ReqModel.NewPassword.Length < 6)
+                {
+                    throw new CustomException("Password must be at least 6 characters!");
+                }
+                var Auth = Authentication.CreateHashPassword(ReqModel.NewPassword);
+                user.Password = Auth.HashedPassword;
+                user.Salt = Auth.Salt;
+                user.Status = GeneralStatusEnums.Active.ToString();
+                await _userRepositories.Update(user);
+                return new MessageResultModel
+                {
+                    Message = "Ok"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException("Error: " + ex.Message);
+            }
         }
     }
 }

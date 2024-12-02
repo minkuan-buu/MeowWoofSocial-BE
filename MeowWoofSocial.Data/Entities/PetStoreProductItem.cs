@@ -17,7 +17,11 @@ public partial class PetStoreProductItem
 
     public string Status { get; set; } = null!;
 
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
+    public virtual ICollection<PetStoreProductRating> PetStoreProductRatings { get; set; } = new List<PetStoreProductRating>();
 
     public virtual PetStoreProduct Product { get; set; } = null!;
 }

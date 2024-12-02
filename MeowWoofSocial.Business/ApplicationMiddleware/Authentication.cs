@@ -93,6 +93,27 @@ public class Authentication
         return Encodetoken;
     }
 
+    public static string GenerateTempJWT(string Email)
+    {
+        var SecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Key));
+        var Credential = new SigningCredentials(SecurityKey, SecurityAlgorithms.HmacSha256);
+        List<Claim> Claims = new()
+        {
+            new Claim("type", "reset"),
+            new Claim("email", Email),
+        };
+
+        var Token = new JwtSecurityToken(
+            issuer: Issuser,
+            audience: Issuser,
+            claims: Claims,
+            expires: DateTime.Now.AddMinutes(10),
+            signingCredentials: Credential
+            );
+        var Encodetoken = new JwtSecurityTokenHandler().WriteToken(Token);
+        return Encodetoken;
+    }
+
     public static string GenerateRandomPassword()
     {
         int length = 12;

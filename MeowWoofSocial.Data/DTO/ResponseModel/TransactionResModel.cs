@@ -27,10 +27,27 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
     public class OrderResModel
     {
         public Guid Id { get; set; }
-        public string RefId { get; set; }
         public List<OrderPetStore> PetStores { get; set; } = null!;
         public OrderUserAddress? UserAddress { get; set; } = null!;
         public decimal TotalPrice { get; set; }
+    }
+    
+    public class ListOrderResModel
+    {
+        public Guid Id { get; set; }
+        public List<OrderPetStore> PetStores { get; set; } = null!;
+        public OrderUserAddress? UserAddress { get; set; } = null!;
+        public decimal TotalPrice { get; set; }
+        public string Status { get; set; } = null!;
+    }
+    
+    public class OrderPaymentResModel
+    {
+        public Guid Id { get; set; }
+        public List<OrderPetStore> PetStores { get; set; } = null!;
+        public OrderUserAddress? UserAddress { get; set; } = null!;
+        public decimal TotalPrice { get; set; }
+        public string StatusPayment { get; set; } = null!;
     }
 
     public class OrderPetStore

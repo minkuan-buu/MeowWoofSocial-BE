@@ -23,6 +23,8 @@ public partial class PetStore
 
     public DateTime? UpdateAt { get; set; }
 
+    public string TypeStore { get; set; } = null!;
+
     public virtual ICollection<PetCareBooking> PetCareBookings { get; set; } = new List<PetCareBooking>();
 
     public virtual ICollection<PetStoreProduct> PetStoreProducts { get; set; } = new List<PetStoreProduct>();

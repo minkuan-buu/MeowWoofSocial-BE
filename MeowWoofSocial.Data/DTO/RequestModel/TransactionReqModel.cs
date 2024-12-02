@@ -76,5 +76,6 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public Guid ProductItemId { get; set; }
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
+        public Guid? CartId { get; set; }
     }
 }
