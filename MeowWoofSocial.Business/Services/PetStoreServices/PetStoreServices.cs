@@ -174,8 +174,8 @@ namespace MeowWoofSocial.Business.Services.PetStoreServices
             var result = petStoreServices.Select(x => new PetStoreServiceResModel()
             {
                 Id = x.Id,
-                Name = x.Name,
-                Description = x.Description,
+                Name = TextConvert.ConvertFromUnicodeEscape(x.Name),
+                Description = TextConvert.ConvertFromUnicodeEscape(x.Description),
                 Attachment = x.Attachment ?? string.Empty,
                 Type = x.TypeStore,
                 AverageRating = x.PetStoreRatings.Count == 0 ? 0 : x.PetStoreRatings.Sum(y => y.Rating) / x.PetStoreRatings.Count
