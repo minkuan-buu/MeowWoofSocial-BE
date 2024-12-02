@@ -305,6 +305,9 @@ public partial class MeowWoofSocialContext : DbContext
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.TypeStore)
+                .HasMaxLength(200)
+                .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.User).WithMany(p => p.PetStores)
