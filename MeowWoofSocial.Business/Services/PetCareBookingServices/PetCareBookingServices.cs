@@ -86,5 +86,22 @@ namespace MeowWoofSocial.Business.Services.PetCareBookingServices
 
             return result;
         }
+        
+        public async Task<MessageResultModel> CancelPetCareBooking(Guid PetCareBookingId, string Token)
+        {
+            Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
+            var petCareBooking = await _petCareBookingRepositories.GetSingle(x => x.Id.Equals(PetCareBookingId) && x.UserId.Equals(UserId));
+            if (petCareBooking == null)
+                throw new CustomException("Booking not found");
+            petCareBooking.Status = OrderEnums.Cancelled.ToString();
+            await _petCareBookingRepositories.Update(petCareBooking);
+            var petCareBookingDetail = await _petCareBookingDetailRepositories.GetSingle(x => x.BookingId.Equals(PetCareBookingId));
+            petCareBookingDetail.Status = OrderEnums.Cancelled.ToString();
+            await _petCareBookingDetailRepositories.Update(petCareBookingDetail);
+            return new MessageResultModel()
+            {
+                Message = "Ok"
+            };
+        }
     }
 }

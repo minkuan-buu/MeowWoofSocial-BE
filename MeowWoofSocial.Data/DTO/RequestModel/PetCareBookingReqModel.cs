@@ -20,4 +20,10 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
         public string TypeOfDisease { get; set; }
         public DateTime BookingDate { get; set; }
     }
+    
+    public class PetCareBookingUpdateReqModel
+    {
+        public Guid Id { get; set; }
+        public List<PetCareBookingDetailCreateReqModel> PetCareBookingDetails { get; set; } = new();
+    }
 }

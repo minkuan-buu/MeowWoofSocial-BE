@@ -24,4 +24,15 @@ namespace MeowWoofSocial.Data.DTO.ResponseModel
         public string Status { get; set; }
         public DateTime BookingDate { get; set; }
     }
+    
+    public class PetCareBookingUpdateResModel
+    {
+        public Guid Id { get; set; }
+        public Guid PetStoreId { get; set; }
+        public Guid UserId { get; set; }
+        public Guid PetCareCategoryId { get; set; }
+        public DateTime CreateAt { get; set; }
+        public string Status { get; set; }
+        public List<PetCareBookingDetailCreateResModel> PetCareBookingDetails { get; set; } = new();
+    }
 }
