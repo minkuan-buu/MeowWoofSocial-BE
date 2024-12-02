@@ -414,6 +414,30 @@ namespace MeowWoofSocial.Business.MapperProfiles
                 .ForMember(dest => dest.Breed, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Breed)))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Age)))
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => TextConvert.ConvertFromUnicodeEscape(src.Gender)));
-        }
+            
+            CreateMap<PetCareBookingCreateReqModel, PetCareBooking>()
+                .ForMember(dest => dest.PetStoreId, opt => opt.MapFrom(src => src.PetStoreId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.PetCareCategoryId, opt => opt.MapFrom(src => src.PetCareCategoryId))
+                .ForMember(dest => dest.PetCareBookingDetails, opt => opt.Ignore());
+
+            CreateMap<PetCareBooking, PetCareBookingCreateResModel>()
+                .ForMember(dest => dest.PetStoreId, opt => opt.MapFrom(src => src.PetStoreId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest=> dest.CreateAt, opt => opt.MapFrom(src => src.CreateAt))
+                .ForMember(dest => dest.PetCareCategoryId, opt => opt.MapFrom(src => src.PetCareCategoryId))
+                .ForMember(dest => dest.PetCareBookingDetails, opt => opt.MapFrom(src => src.PetCareBookingDetails
+                    .Select(x => new PetCareBookingDetailCreateResModel()
+                    {
+                        Id = x.Id,
+                        BookingId = x.BookingId,
+                        PetId = x.PetId,
+                        TypeTakeCare = TextConvert.ConvertFromUnicodeEscape(x.TypeTakeCare),
+                        TypeOfDisease = TextConvert.ConvertFromUnicodeEscape(x.TypeOfDisease),
+                        Status = x.Status,
+                        BookingDate = x.BookingDate
+                    }).ToList()));
+        } 
     }
 }
