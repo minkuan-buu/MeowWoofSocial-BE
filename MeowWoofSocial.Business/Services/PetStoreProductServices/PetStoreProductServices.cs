@@ -300,8 +300,8 @@ public class PetStoreProductServices : IPetStoreProductServices
         try
         {
             var newPetStoreProduct = await _petStoreProductRepo.GetSingle(x => x.Id == petStoreProductId,
-                includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems");
-
+                includeProperties: "PetStoreProductAttachments,PetStore,Category.ParentCategory,PetStoreProductItems.OrderDetails.Order");
+            
             var pettStoreProductResModel = _mapper.Map<PetStoreProductCreateResModel>(newPetStoreProduct);
             result.Data = pettStoreProductResModel;
         }
