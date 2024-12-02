@@ -17,6 +17,8 @@ public partial class PetCareBookingDetail
 
     public string Status { get; set; } = null!;
 
+    public DateTime BookingDate { get; set; }
+
     public virtual PetCareBooking Booking { get; set; } = null!;
 
     public virtual UserPet Pet { get; set; } = null!;
