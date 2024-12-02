@@ -5,7 +5,7 @@ namespace MeowWoofSocial.Business.Services.PetCareBookingServices
 {
     public interface IPetCareBookingServices
     {
-        Task<DataResultModel<PetCareBookingCreateResModel>> CreatePetCareBooking(PetCareBookingCreateReqModel petCareBooking,
+        Task<string> CreatePetCareBooking(PetCareBookingCreateReqModel petCareBooking,
             string token);
         Task<MessageResultModel> CancelPetCareBooking(Guid PetCareBookingId, string Token);
 

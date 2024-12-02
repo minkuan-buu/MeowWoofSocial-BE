@@ -17,6 +17,10 @@ public partial class PetCareBooking
 
     public Guid PetCareCategoryId { get; set; }
 
+    public Guid OrderId { get; set; }
+
+    public virtual Order Order { get; set; } = null!;
+
     public virtual ICollection<PetCareBookingDetail> PetCareBookingDetails { get; set; } = new List<PetCareBookingDetail>();
 
     public virtual PetCareCategory PetCareCategory { get; set; } = null!;
