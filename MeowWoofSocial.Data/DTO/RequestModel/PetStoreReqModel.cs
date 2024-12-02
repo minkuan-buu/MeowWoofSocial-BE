@@ -89,9 +89,9 @@ namespace MeowWoofSocial.Data.DTO.RequestModel
     public class PetStoreProductReq
     {
         public int PageSize { get; set; }
-        
+        public string? Keyword { get; set; }
+        public string? Category { get; set; }
         public Guid? lastPetStoreProductId { get; set; } = null;
-        
         public int? loadedPetStoreProduct { get; set; } = null;
     }
 }
