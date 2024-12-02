@@ -17,6 +17,7 @@ using MeowWoofSocial.Data.Repositories.PostReactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserFollowingRepositories;
 using Google.Cloud.Storage.V1;
 using MeowWoofSocial.Business.Services.CartServices;
+using MeowWoofSocial.Business.Services.CategoryServices;
 using MeowWoofSocial.Business.Services.CloudServices;
 using MeowWoofSocial.Business.Services.PetStoreProductServices;
 using MeowWoofSocial.Business.Services.UserFollowingServices;
@@ -42,6 +43,7 @@ using MeowWoofSocial.Business.Services.OTPServices;
 using MeowWoofSocial.Business.Services.RatingServices;
 using MeowWoofSocial.Business.Ultilities.Email;
 using MeowWoofSocial.Data.Repositories.CartRepositories;
+using MeowWoofSocial.Data.Repositories.CategoryRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductRatingRepositories;
 
 
@@ -133,6 +135,7 @@ builder.Services.AddScoped<IUserPetRepositories, UserPetRepositories>();
 builder.Services.AddScoped<IOTPRepositories, OTPRepositories>();
 builder.Services.AddScoped<ICartRepositories, CartRepositories>();
 builder.Services.AddScoped<IPetStoreProductRatingRepositories, PetStoreProductRatingRepositories>();
+builder.Services.AddScoped<ICategoryRepositories, CategoryRepositories>();
 
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();
@@ -148,6 +151,7 @@ builder.Services.AddScoped<IOTPServices, OTPServices>();
 builder.Services.AddScoped<ICartServices, CartServices>();
 builder.Services.AddScoped<IEmail, Email>();
 builder.Services.AddScoped<IRatingServices, RatingServices>();
+builder.Services.AddScoped<ICategoryServices, CategoryServices>();
 
 //=========================================== CORS ================================================
 builder.Services.AddCors(options =>
