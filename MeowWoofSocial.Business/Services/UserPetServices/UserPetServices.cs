@@ -69,5 +69,85 @@ namespace MeowWoofSocial.Business.Services.UserPetServices
             }
             return result;
         }
+
+        public async Task<DataResultModel<UserPetUpdateResMdoel>> UpdateUserPet(UserPetUpdateReqMdoel userPetUpdateReq,
+            string token)
+        {
+            var result = new DataResultModel<UserPetUpdateResMdoel>();
+            try
+            {
+                Guid userId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userPet = await _userPetRepo.GetSingle(x => x.Id == userPetUpdateReq.Id && x.UserId == userId);
+
+                if (userPetUpdateReq == null)
+                {
+                    throw new CustomException("Pet not found or you do not have permission to update this Pet Store");
+                }
+                if (!string.IsNullOrEmpty(userPet.Attachment))
+                {
+                    await _cloudStorage.DeleteFilesInPathAsync(userPet.Attachment);
+                }
+                userPet.Name = TextConvert.ConvertToUnicodeEscape(userPetUpdateReq.Name ?? string.Empty);
+                userPet.Type = TextConvert.ConvertToUnicodeEscape(userPetUpdateReq.Type ?? string.Empty);
+                userPet.Breed = TextConvert.ConvertToUnicodeEscape(userPetUpdateReq.Breed ?? string.Empty);
+                userPet.Age = TextConvert.ConvertToUnicodeEscape(userPetUpdateReq.Age ?? string.Empty);
+                userPet.Gender = TextConvert.ConvertToUnicodeEscape(userPetUpdateReq.Gender ?? string.Empty);
+                userPet.Weight = userPetUpdateReq.Weight;
+                
+                string filePath = $"user/{userId}/pet/{userPet.Id}/attachment";
+                if (userPetUpdateReq.Attachment != null)
+                {
+                    var attachments = await _cloudStorage.UploadSingleFile(userPetUpdateReq.Attachment, filePath);
+                    userPet.Attachment = attachments;
+                }
+                userPet.UpdateAt = DateTime.Now;
+
+                await _userPetRepo.Update(userPet);
+
+                var updatedUserPet = await _userPetRepo.GetSingle(x => x.Id == userPetUpdateReq.Id, includeProperties: "User");
+
+                result.Data = _mapper.Map<UserPetUpdateResMdoel>(updatedUserPet);
+
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+        
+        public async Task<MessageResultModel> DeleteUserPet(Guid PetId , string Token)
+        {
+            Guid UserId = new Guid(Authentication.DecodeToken(Token, "userid"));
+            var userPet = await _userPetRepo.GetSingle(x => x.Id.Equals(PetId) && x.UserId.Equals(UserId));
+            if (userPet == null)
+                throw new CustomException("UserPet not found");
+            if (!string.IsNullOrEmpty(userPet.Attachment))
+            {
+                await _cloudStorage.DeleteFilesInPathAsync(userPet.Attachment);
+            }
+            await _userPetRepo.Delete(userPet);
+            return new MessageResultModel()
+            {
+                Message = "Ok"
+            };
+        }
+        
+        public async Task<ListDataResultModel<UserPetModel>> GetUserPetByUserID(Guid userId, string token)
+        {
+            var result = new ListDataResultModel<UserPetModel>();
+            try
+            {
+                Guid UserId = new Guid(Authentication.DecodeToken(token, "userid"));
+                var userPet = await _userPetRepo.GetList(x => x.UserId.Equals(UserId));
+                result.Data = _mapper.Map<List<UserPetModel>>(userPet);
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException($"An error occurred: {ex.Message}");
+            }
+            return result;
+        }
+        
     }
 }
