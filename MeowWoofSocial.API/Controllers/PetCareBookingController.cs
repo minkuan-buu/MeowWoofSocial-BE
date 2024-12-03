@@ -25,7 +25,7 @@ namespace MeowWoofSocial.API.Controllers
             {
                 var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
                 var result = await _petCareBookingServices.CreatePetCareBooking(petCareBookingCreateReq, token);
-                return Ok(result);
+                return Ok(new { redirectUrl = result });
             }
             catch (CustomException ex)
             {

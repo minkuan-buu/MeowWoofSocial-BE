@@ -47,6 +47,7 @@ using MeowWoofSocial.Data.Repositories;
 using MeowWoofSocial.Data.Repositories.CartRepositories;
 using MeowWoofSocial.Data.Repositories.CategoryRepositories;
 using MeowWoofSocial.Data.Repositories.PetCareBookingRepositories;
+using MeowWoofSocial.Data.Repositories.PetCareCategoryRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductRatingRepositories;
 
 
@@ -141,6 +142,7 @@ builder.Services.AddScoped<IPetStoreProductRatingRepositories, PetStoreProductRa
 builder.Services.AddScoped<IPetCareBookingRepositories, PetCareBookingRepositories>();
 builder.Services.AddScoped<ICategoryRepositories, CategoryRepositories>();
 builder.Services.AddScoped<IPetCareBookingDetailRepositories, PetCareBookingDetailRepositories>();
+builder.Services.AddScoped<IPetCareCategoryRepositories, PetCareCategoryRepositories>();
 
 //=========================================== SERVICE =============================================
 builder.Services.AddScoped<IUserServices, UserServices>();

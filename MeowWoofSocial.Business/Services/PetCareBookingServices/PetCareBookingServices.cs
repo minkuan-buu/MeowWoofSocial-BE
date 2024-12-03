@@ -8,6 +8,7 @@ using MeowWoofSocial.Data.Enums;
 using MeowWoofSocial.Data.Repositories;
 using MeowWoofSocial.Data.Repositories.OrderRepositories;
 using MeowWoofSocial.Data.Repositories.PetCareBookingRepositories;
+using MeowWoofSocial.Data.Repositories.PetCareCategoryRepositories;
 using MeowWoofSocial.Data.Repositories.TransactionRepositories;
 using MeowWoofSocial.Data.Repositories.UserRepositories;
 using Net.payOS;
@@ -24,13 +25,15 @@ namespace MeowWoofSocial.Business.Services.PetCareBookingServices
         private readonly IPetCareBookingDetailRepositories _petCareBookingDetailRepositories;
         private readonly IOrderRepositories _orderRepositories;
         private readonly ITransactionRepositories _transactionRepositories;
+        private readonly IPetCareCategoryRepositories _petCareCategoryRepositories;
         private PayOS _payOS;
         private const string MEMO_PREFIX = "DH";
         
-        public PetCareBookingServices(IMapper mapper, IPetCareBookingRepositories petCareBookingRepositories, IUserRepositories userRepo, IPetCareBookingDetailRepositories petCareBookingDetailRepositories, IOrderRepositories orderRepositories, ITransactionRepositories transactionRepositories)
+        public PetCareBookingServices(IMapper mapper, IPetCareBookingRepositories petCareBookingRepositories, IUserRepositories userRepo, IPetCareBookingDetailRepositories petCareBookingDetailRepositories, IOrderRepositories orderRepositories, ITransactionRepositories transactionRepositories, IPetCareCategoryRepositories petCareCategoryRepositories)
         {
             _payOS = new PayOS("421fdf87-bbe1-4694-a76c-17627d705a85", "7a2f58da-4003-4349-9e4b-f6bbfc556c9b", "da759facf68f863e0ed11385d3bf9cf24f35e2b171d1fa8bae8d91ce1db9ff0c");
             _mapper = mapper;
+            _petCareCategoryRepositories = petCareCategoryRepositories;
             _petCareBookingDetailRepositories = petCareBookingDetailRepositories;
             _petCareBookingRepositories = petCareBookingRepositories;
             _userRepo = userRepo;
@@ -39,7 +42,7 @@ namespace MeowWoofSocial.Business.Services.PetCareBookingServices
             _transactionRepositories = transactionRepositories;
         }
         
-        public async Task<string> CreatePetCareBooking(PetCareBookingCreateReqModel petCareBooking,
+        public async Task<String> CreatePetCareBooking(PetCareBookingCreateReqModel petCareBooking,
             string token)
         {
             var result = new DataResultModel<PetCareBookingCreateResModel>();
@@ -52,7 +55,10 @@ namespace MeowWoofSocial.Business.Services.PetCareBookingServices
                 {
                     throw new CustomException("You are banned from booking pet care due to violate of terms!");
                 }
-                var checkExist = await _petCareBookingRepositories.GetSingle(x => x.UserId == userId && x.Status == OrderEnums.Pending.ToString() && x.PetCareCategoryId == petCareBooking.PetCareCategoryId, includeProperties:"Order.Transactions");
+                var getPetCareCategory = await _petCareCategoryRepositories.GetSingle(x => x.Name == petCareBooking.PetCareBookingDetails.FirstOrDefault().TypeTakeCare);
+                
+                var checkExist = await _petCareBookingRepositories.GetSingle(x => x.UserId == userId && x.Status == OrderEnums.Pending.ToString() && x.PetCareCategoryId == getPetCareCategory.Id, includeProperties:"Order.Transactions");
+                
                 if (checkExist != null)
                 {
                     return $"https://pay.payos.vn/web/{checkExist.Order.Transactions.FirstOrDefault(x => x.Status.Equals(TransactionEnums.PENDING.ToString()))?.PaymentLinkId}";
@@ -72,10 +78,10 @@ namespace MeowWoofSocial.Business.Services.PetCareBookingServices
                 var petCareBookingEntity = _mapper.Map<PetCareBooking>(petCareBooking);
                 petCareBookingEntity.Id = NewPetCareBookingId;
                 petCareBookingEntity.PetStoreId = petCareBooking.PetStoreId;
-                petCareBookingEntity.UserId = petCareBooking.UserId;
+                petCareBookingEntity.UserId = userId;
                 petCareBookingEntity.CreateAt = DateTime.Now;
                 petCareBookingEntity.Status = OrderEnums.Pending.ToString();
-                petCareBookingEntity.PetCareCategoryId = petCareBooking.PetCareCategoryId;
+                petCareBookingEntity.PetCareCategoryId = getPetCareCategory.Id;
                 petCareBookingEntity.OrderId = newOrderId;
                 await _petCareBookingRepositories.Insert(petCareBookingEntity);
                 

@@ -65,11 +65,11 @@ namespace MeowWoofSocial.API.Controllers
             }
         }
         
-        [HttpGet("{id:Guid}")]
-        public async Task<IActionResult> GetPetStoreById(Guid id)
+        [HttpGet]
+        public async Task<IActionResult> GetPetStoreById()
         {
             var token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-            var result = await _userPetServices.GetUserPetByUserID(id, token);
+            var result = await _userPetServices.GetUserPetByUserID(token);
             return Ok(result);
         }
     }

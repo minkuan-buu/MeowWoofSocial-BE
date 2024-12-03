@@ -133,7 +133,7 @@ namespace MeowWoofSocial.Business.Services.UserPetServices
             };
         }
         
-        public async Task<ListDataResultModel<UserPetModel>> GetUserPetByUserID(Guid userId, string token)
+        public async Task<ListDataResultModel<UserPetModel>> GetUserPetByUserID(string token)
         {
             var result = new ListDataResultModel<UserPetModel>();
             try

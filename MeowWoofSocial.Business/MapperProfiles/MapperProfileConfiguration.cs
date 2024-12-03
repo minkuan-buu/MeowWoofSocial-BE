@@ -417,8 +417,6 @@ namespace MeowWoofSocial.Business.MapperProfiles
             
             CreateMap<PetCareBookingCreateReqModel, PetCareBooking>()
                 .ForMember(dest => dest.PetStoreId, opt => opt.MapFrom(src => src.PetStoreId))
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.PetCareCategoryId, opt => opt.MapFrom(src => src.PetCareCategoryId))
                 .ForMember(dest => dest.PetCareBookingDetails, opt => opt.Ignore());
 
             CreateMap<PetCareBooking, PetCareBookingCreateResModel>()

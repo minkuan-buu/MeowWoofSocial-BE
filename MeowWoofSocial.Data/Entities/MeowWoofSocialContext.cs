@@ -281,7 +281,9 @@ public partial class MeowWoofSocialContext : DbContext
                 .HasMaxLength(4000)
                 .IsUnicode(false);
             entity.Property(e => e.Description).HasColumnType("text");
-            entity.Property(e => e.Name).HasColumnType("text");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .IsUnicode(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false);
