@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using MeowWoofSocial.Data.DTO.Custom;
 using MeowWoofSocial.Data.DTO.ResponseModel;
 using MeowWoofSocial.Data.Entities;
 using Microsoft.IdentityModel.Tokens;
@@ -11,8 +12,8 @@ namespace MeowWoofSocial.Business.ApplicationMiddleware;
 
 public class Authentication
 {
-    private static string Key = "TestingIssuerSigningKeyPTEducationMS@123";
-    private static string Issuser = "TestingJWTIssuerSigningPTEducationMS@123";
+    private static string Key = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new CustomException("JWT Key not configured.");
+    private static string Issuser = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? throw new CustomException("JWT Issuer not configured.");
 
     public Authentication()
     {

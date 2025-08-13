@@ -43,6 +43,7 @@ using MeowWoofSocial.Business.Services.RatingServices;
 using MeowWoofSocial.Business.Ultilities.Email;
 using MeowWoofSocial.Data.Repositories.CartRepositories;
 using MeowWoofSocial.Data.Repositories.PetStoreProductRatingRepositories;
+DotNetEnv.Env.Load();
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,8 +90,21 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(rawConnectionString))
+{
+    throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+}
+
+var connectionString = rawConnectionString
+    .Replace("${DB_HOST}", Environment.GetEnvironmentVariable("DB_HOST") ?? throw new InvalidOperationException("DB_HOST environment variable is not set."))
+    .Replace("${DB_PORT}", Environment.GetEnvironmentVariable("DB_PORT") ?? throw new InvalidOperationException("DB_PORT environment variable is not set."))
+    .Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER") ?? throw new InvalidOperationException("DB_USER environment variable is not set."))
+    .Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? throw new InvalidOperationException("DB_PASSWORD environment variable is not set."))
+    .Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME") ?? throw new InvalidOperationException("DB_NAME environment variable is not set."));
+
 builder.Services.AddDbContext<MeowWoofSocialContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 //======================================= AUTHENTICATION ==========================================
 builder.Services.AddAuthentication("MeowWoofAuthentication")
